@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aureus – CF-Lunge</title>
+<title>Aureus – CF Lung</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
-/* VOICE: verspielt, aber biologisch ehrlich – ein Mikroskop-Arcade-Automat
-   IDEA: Blick durchs Mikroskop in den Atemweg einer CF-Lunge
-   PICTURE: das Spielfeld – zäher Schleim, Flimmerhärchen, goldene Kokken, Immunzellen
-   COLOUR and TYPE: tiefes Gewebe-Pflaume, Aureus-Gold, Immun-Violett; Baloo 2
-   LAYOUT: Titel, Spielfeld im Gehäuse, Legende der Gegner, kurze Hintergrund-Karten */
+/* VOICE: playful but biologically honest – a microscope arcade cabinet
+   IDEA: looking through a microscope into the airway of a CF lung
+   PICTURE: the playfield – thick mucus, cilia, golden cocci, immune cells
+   COLOUR and TYPE: deep tissue plum, aureus gold, immune violet; Baloo 2
+   LAYOUT: title, playfield in a cabinet, enemy legend, short science cards */
 :root{color-scheme:light dark;
   --bg:light-dark(#f6ecf2,#14060f);--ink:light-dark(#2a0c20,#f6e9f1);
   --case:light-dark(#4a1838,#2a0c20);--case2:light-dark(#6a2650,#3e1430);
@@ -64,6 +64,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .top li.muted{color:#c9b6ff;justify-content:center;font-size:15px}
 .overlay h2{margin:0;font-size:clamp(30px,6vw,44px);line-height:1.05;color:var(--gold)}
 .overlay p{margin:0;max-width:38ch;font-size:17px;color:#e4cbd9}
+.overlay .stats{white-space:pre-line;font-size:15.5px;color:#f6e9f1;background:#ffffff12;border-radius:12px;padding:6px 14px;max-width:44ch;line-height:1.5}
+.overlay .stats[hidden]{display:none}
 .overlay .fact{font-size:15px;color:#c9b6ff;max-width:42ch;border-top:1px solid #ffffff22;padding-top:10px;margin-top:4px}
 .overlay .fact:empty{display:none}
 .btn{font:inherit;font-weight:800;font-size:19px;min-height:48px;padding:6px 28px;border:0;border-radius:999px;background:var(--gold);color:#2a0c20;cursor:pointer;box-shadow:0 5px 0 #b88a10;margin-top:8px}
@@ -94,85 +96,88 @@ kbd{font:inherit;font-weight:700;background:var(--case);color:#f6e9f1;border-rad
 <body>
 <div class="wrap">
   <header>
-    <h1><span>Aureus</span><span class="sub">Überleben in der CF-Lunge</span></h1>
-    <div class="best">Rekord: <b id="best">0</b></div>
+    <h1><span>Aureus</span><span class="sub">Surviving the CF lung</span></h1>
+    <div class="best">Best: <b id="best">0</b></div>
   </header>
   <div class="case">
     <div class="hud">
-      <span>Punkte: <span id="score">0</span></span>
+      <span>Score: <span id="score">0</span></span>
       <span class="lvl">Level <span id="level">1</span></span>
       <span class="mult" id="mult" hidden>BOSS · ×2</span>
-      <span class="lives" id="lives" aria-label="Leben">♥♥♥</span>
-      <span><button class="icon" id="soundBtn" aria-label="Ton an/aus">🔊</button>
+      <span class="lives" id="lives" aria-label="Lives">♥♥♥</span>
+      <span><button class="icon" id="dashBtn" aria-label="Dash">⚡</button>
+      <button class="icon" id="soundBtn" aria-label="Sound on/off">🔊</button>
       <button class="icon" id="pauseBtn" aria-label="Pause">II</button></span>
     </div>
     <div class="screen" id="screen">
       <canvas id="c"></canvas>
       <div class="overlay" id="ov">
         <h2 id="ovTitle">Aureus</h2>
-        <p id="ovText">Du bist eine Kolonie Staphylococcus aureus im zähen Schleim einer CF-Lunge. Alles, was funkelt, darfst du einsammeln. Alles, was rot leuchtet und dich anstarrt, ist das Immunsystem – ausweichen!</p>
+        <p id="ovText">You are a colony of Staphylococcus aureus in the thick mucus of a cystic fibrosis lung. Anything that sparkles, collect it. Anything that glows red and stares at you is the immune system – dodge it!</p>
+        <p id="ovStats" class="stats" hidden></p>
         <form id="nameForm" class="nameform" hidden>
-          <label for="nameIn" class="sr">Dein Name</label>
-          <input id="nameIn" maxlength="20" placeholder="Dein Name" autocomplete="nickname" enterkeyhint="send">
-          <button class="btn small" id="sendBtn">Eintragen</button>
+          <label for="nameIn" class="sr">Your name</label>
+          <input id="nameIn" maxlength="20" placeholder="Your name" autocomplete="nickname" enterkeyhint="send">
+          <button class="btn small" id="sendBtn">Submit</button>
         </form>
         <p class="lbmsg" id="lbMsg" aria-live="polite"></p>
-        <div class="top"><strong>🏆 Top 3</strong><ol id="top3"><li class="muted">Lade …</li></ol></div>
+        <div class="top"><strong>🏆 Top 3</strong><ol id="top3"><li class="muted">Loading …</li></ol></div>
         <p class="fact" id="ovFact"></p>
-        <button class="btn" id="startBtn">Infektion starten</button>
+        <button class="btn" id="startBtn">Start infection</button>
       </div>
     </div>
   </div>
-  <p class="keys">Pfeiltasten oder <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> zum Steuern · <kbd>P</kbd> Pause · auf dem Handy einfach ziehen</p>
+  <p class="keys">Arrow keys or <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> to move · <kbd>Space</kbd> dash (⚡, phone: double-tap) · <kbd>P</kbd> pause · on a phone just drag</p>
 
   <div class="groups">
     <section class="grp good">
-      <h3>✔ Einsammeln <small>funkelt</small></h3>
+      <h3>✔ Collect <small>it sparkles</small></h3>
       <ul class="legend">
-        <li><canvas class="ico" data-k="food"></canvas><span><b>Nährstoff</b> +10 Punkte</span></li>
-        <li><canvas class="ico" data-k="iron"></canvas><span><b>Eisen (Fe)</b> +50 Punkte</span></li>
-        <li><canvas class="ico" data-k="epo"></canvas><span><b>EPO</b> ultraselten (0,1 % pro Level) – 3 s keine Gegner, 18× Häm regnet!</span></li>
-        <li><canvas class="ico" data-k="heme"></canvas><span><b>Häm-Jackpot</b> +200 – selten &amp; superschnell!</span></li>
-        <li><canvas class="ico" data-k="shield"></canvas><span><b>Biofilm</b> 5 s Schutzschild</span></li>
+        <li><canvas class="ico" data-k="food"></canvas><span><b>Nutrient</b> +10 points</span></li>
+        <li><canvas class="ico" data-k="iron"></canvas><span><b>Iron (Fe)</b> +50 points</span></li>
+        <li><canvas class="ico" data-k="scv"></canvas><span><b>SCV</b> 5 s small &amp; hard to hit, a bit slower</span></li>
+        <li><canvas class="ico" data-k="epo"></canvas><span><b>EPO</b> ultra rare (0.1% per level) – 3 s without enemies, 18 hemes rain down!</span></li>
+        <li><canvas class="ico" data-k="heme"></canvas><span><b>Heme jackpot</b> +200 – rare &amp; super fast!</span></li>
+        <li><canvas class="ico" data-k="shield"></canvas><span><b>Biofilm</b> 5 s shield</span></li>
       </ul>
     </section>
     <section class="grp bad">
-      <h3>✖ Ausweichen <small>rot leuchtend, kostet ein Leben</small></h3>
+      <h3>✖ Dodge <small>glows red, costs a life</small></h3>
       <ul class="legend">
-        <li><canvas class="ico" data-k="enemy" data-s="0"></canvas><span><b>Antikörper</b> klein</span></li>
-        <li><canvas class="ico" data-k="enemy" data-s="1"></canvas><span><b>Komplement</b></span></li>
+        <li><canvas class="ico" data-k="enemy" data-s="0"></canvas><span><b>Antibody</b> small</span></li>
+        <li><canvas class="ico" data-k="enemy" data-s="1"></canvas><span><b>Complement</b></span></li>
         <li><canvas class="ico" data-k="enemy" data-s="2"></canvas><span><b>Neutrophil</b></span></li>
-        <li><canvas class="ico" data-k="enemy" data-s="3"></canvas><span><b>Makrophage</b></span></li>
-        <li><canvas class="ico" data-k="enemy" data-s="4"></canvas><span><b>NET</b> riesig</span></li>
+        <li><canvas class="ico" data-k="enemy" data-s="3"></canvas><span><b>Macrophage</b></span></li>
+        <li><canvas class="ico" data-k="enemy" data-s="4"></canvas><span><b>NET</b> huge</span></li>
       </ul>
     </section>
     <section class="grp boss">
-      <h3>☠ Boss alle 5 Level <small>Warnung, dann 30 s überleben – dabei ×2 Punkte</small></h3>
-      <p class="reward">Nach jedem Boss: fehlende Herzen werden aufgefüllt. Hast du kein normales Herz verloren, gibt es stattdessen ein <b class="g">goldenes Herz ♥</b> – es wird bei Treffern zuerst verbraucht, kommt nicht zurück und lässt sich stapeln.</p>
+      <h3>☠ Boss every 5 levels <small>warning, then survive 30 s – double points meanwhile</small></h3>
+      <p class="reward">After each boss, missing hearts are refilled. If you haven't lost a regular heart, you get a <b class="g">golden heart ♥</b> instead – it is used up first when you get hit, doesn't come back, and stacks.</p>
       <ul class="legend">
-        <li><canvas class="ico wide" data-k="boss" data-s="0"></canvas><span><b>P. aeruginosa</b> · Level 5, 25, 45 … – spuckt gezielt Pyocyanin, LasA &amp; HQNO</span></li>
-        <li><canvas class="ico wide" data-k="boss" data-s="1"></canvas><span><b>B. cepacia</b> · Level 10, 30, 50 … – springt umher, feuert Fächer-Salven</span></li>
-        <li><canvas class="ico wide" data-k="boss" data-s="2"></canvas><span><b>A. fumigatus</b> · Level 15, 35, 55 … – Schimmelpilz, lässt Sporen regnen</span></li>
-        <li><canvas class="ico wide" data-k="boss" data-s="3"></canvas><span><b>Antibiotika</b> · Level 20, 40, 60 … – β-Laktam-Spirale gegen S. aureus</span></li>
+        <li><canvas class="ico wide" data-k="boss" data-s="0"></canvas><span><b>P. aeruginosa</b> · levels 5, 25, 45 … – spits pyocyanin, LasA &amp; HQNO right at you</span></li>
+        <li><canvas class="ico wide" data-k="boss" data-s="1"></canvas><span><b>B. cepacia</b> · levels 10, 30, 50 … – jumps around, fires fan volleys</span></li>
+        <li><canvas class="ico wide" data-k="boss" data-s="2"></canvas><span><b>A. fumigatus</b> · levels 15, 35, 55 … – a mould that rains spores</span></li>
+        <li><canvas class="ico wide" data-k="boss" data-s="3"></canvas><span><b>Antibiotics</b> · levels 20, 40, 60 … – β-lactam spiral aimed at S. aureus</span></li>
       </ul>
     </section>
   </div>
 
-  <h3>Was dahintersteckt</h3>
+  <h3>The science behind it</h3>
   <div class="facts">
-    <div><strong>Zäher Schleim</strong><p>Bei zystischer Fibrose ist der CFTR-Kanal defekt. Der Atemwegsschleim wird wasserarm und zäh, und die Flimmerhärchen können ihn kaum noch abtransportieren.</p></div>
-    <div><strong>Früher Besiedler</strong><p>S. aureus gehört zu den ersten und häufigsten Keimen in CF-Lungen, besonders bei Kindern.</p></div>
-    <div><strong>Goldener Schutz</strong><p>Das goldene Pigment Staphyloxanthin – daher „aureus“ – schützt die Bakterien vor den reaktiven Sauerstoffspezies der Neutrophilen.</p></div>
-    <div><strong>Biofilm &amp; Eisen</strong><p>Im Biofilm überlebt S. aureus Antibiotika und Immunangriffe besser. Eisen hält der Körper knapp, deshalb ist es für Bakterien wertvoll.</p></div>
+    <div><strong>Sticky mucus</strong><p>In cystic fibrosis the CFTR channel is defective. Airway mucus becomes dehydrated and thick, and the cilia can barely clear it.</p></div>
+    <div><strong>Early colonizer</strong><p>S. aureus is one of the first and most common bacteria in CF lungs, especially in children.</p></div>
+    <div><strong>Golden armour</strong><p>The golden pigment staphyloxanthin – hence “aureus” – protects the bacteria from the reactive oxygen species of neutrophils.</p></div>
+    <div><strong>Biofilm &amp; iron</strong><p>Inside a biofilm, S. aureus survives antibiotics and immune attacks better. The body keeps iron scarce, which makes it precious for bacteria.</p></div>
   </div>
-  <p class="note">Ein Lernspiel – stark vereinfacht und nicht maßstabsgetreu.</p>
+  <p class="note">An educational game – heavily simplified and not to scale.</p>
 </div>
 <script>
 {
 const screen=document.getElementById('screen'),cv=document.getElementById('c');let ctx=cv.getContext('2d');
 const $=id=>document.getElementById(id);
 const ov=$('ov'),ovTitle=$('ovTitle'),ovText=$('ovText'),ovFact=$('ovFact'),startBtn=$('startBtn');
-/* Online-Leaderboard (Supabase) – URL und Publishable Key sind öffentlich */
+/* Online leaderboard (Supabase) – the URL and publishable key are public by design */
 const SB_URL='https://tjbzmfmvmaescrjfkpqf.supabase.co';
 const SB_KEY='sb_publishable_MOWoHg_QgUntexoxI-iORw_C3LvpCv3';
 const nameForm=$('nameForm'),nameIn=$('nameIn'),sendBtn=$('sendBtn'),lbMsg=$('lbMsg'),top3=$('top3');
@@ -181,8 +186,8 @@ const MEDALS=['🥇','🥈','🥉'];
 function renderTop(rows,me){
   top3.textContent='';
   const msg=txt=>{const li=document.createElement('li');li.className='muted';li.textContent=txt;top3.append(li);};
-  if(!rows){msg('Leaderboard gerade nicht erreichbar');return;}
-  if(!rows.length){msg('Noch keine Einträge – sei die/der Erste!');return;}
+  if(!rows){msg('Leaderboard unavailable right now');return;}
+  if(!rows.length){msg('No entries yet – be the first!');return;}
   rows.forEach((r,i)=>{const li=document.createElement('li'),n=document.createElement('span'),b=document.createElement('b');
     n.textContent=MEDALS[i]+' '+String(r.name);b.textContent=String(r.score);li.append(n,b);
     if(me&&String(r.name)===me)li.className='me';top3.append(li);});
@@ -199,27 +204,27 @@ async function submitScore(name,pts){
 let finalScore=0;
 nameForm.addEventListener('submit',async e=>{
   e.preventDefault();const name=nameIn.value.trim().slice(0,20);
-  if(!name){lbMsg.textContent='Bitte gib einen Namen ein.';nameIn.focus();return;}
-  sendBtn.disabled=true;lbMsg.textContent='Wird eingetragen …';
+  if(!name){lbMsg.textContent='Please enter a name.';nameIn.focus();return;}
+  sendBtn.disabled=true;lbMsg.textContent='Submitting …';
   try{await submitScore(name,finalScore);lastName=name;try{localStorage.setItem('aureus-name',name)}catch(e){}
-    lbMsg.textContent='Eingetragen! ✔';nameForm.hidden=true;loadTop(name);startBtn.focus({preventScroll:true});}
-  catch(err){lbMsg.textContent='Konnte nicht eintragen – keine Verbindung zum Leaderboard.';}
+    lbMsg.textContent='Submitted! ✔';nameForm.hidden=true;loadTop(name);startBtn.focus({preventScroll:true});}
+  catch(err){lbMsg.textContent='Could not submit – no connection to the leaderboard.';}
   sendBtn.disabled=false;
 });
 const FACTS=[
- 'S. aureus bildet „Small Colony Variants“: langsam wachsende Formen, die in CF-Lungen lange überdauern und Antibiotika besser tolerieren.',
- 'Protein A auf der Oberfläche von S. aureus bindet Antikörper falsch herum – so entgehen die Bakterien der Markierung für Fresszellen.',
- 'In CF-Atemwegen dominieren Neutrophile. Ihre NETs – Netze aus DNA – fangen Bakterien, machen den Schleim aber noch zäher.',
- 'Staphyloxanthin, das goldene Pigment, wirkt als Antioxidans gegen den „oxidativen Burst“ der Neutrophilen.',
- 'Der Körper versteckt Eisen vor Bakterien („nutritional immunity“). S. aureus holt es sich unter anderem aus Häm.',
- 'Mit zunehmendem Alter von CF-Patienten wird S. aureus oft von Pseudomonas aeruginosa als Hauptkeim abgelöst.',
- 'P. aeruginosa bildet die Protease LasA – auch „Staphylolysin“ genannt –, die die Zellwand von S. aureus auflöst.',
- 'HQNO von P. aeruginosa hemmt die Atmung von S. aureus und treibt es in langsam wachsende Small Colony Variants.',
- 'Pyocyanin ist ein blaugrünes Pigment von P. aeruginosa. Es erzeugt reaktive Sauerstoffspezies und schädigt Wirts- und Konkurrenzzellen.',
- 'Burkholderia cepacia ist gegen viele Antibiotika resistent und kann bei CF das gefährliche „Cepacia-Syndrom“ auslösen. Deshalb werden betroffene Patienten getrennt behandelt.',
- 'Der Schimmelpilz Aspergillus fumigatus wird oft in CF-Atemwegen gefunden. Seine winzigen Sporen werden eingeatmet; manche Patienten entwickeln eine allergische Reaktion (ABPA).',
- 'EPO (Erythropoetin) ist ein Hormon aus der Niere, das die Bildung roter Blutkörperchen anregt. Die stecken voller Hämoglobin – und damit Häm, das S. aureus als Eisenquelle anzapft.',
- 'Gegen S. aureus werden bei CF z. B. Flucloxacillin eingesetzt – ein β-Laktam-Antibiotikum, das den Zellwandaufbau blockiert. MRSA ist dagegen resistent.'];
+ 'S. aureus forms “small colony variants”: slow-growing forms that persist for a long time in CF lungs and tolerate antibiotics better.',
+ 'Protein A on the surface of S. aureus binds antibodies the wrong way round – so the bacteria avoid being tagged for phagocytes.',
+ 'Neutrophils dominate in CF airways. Their NETs – webs of DNA – trap bacteria but also make the mucus even thicker.',
+ 'Staphyloxanthin, the golden pigment, acts as an antioxidant against the “oxidative burst” of neutrophils.',
+ 'The body hides iron from bacteria (“nutritional immunity”). S. aureus gets it from sources such as heme.',
+ 'As people with CF get older, Pseudomonas aeruginosa often replaces S. aureus as the main pathogen.',
+ 'P. aeruginosa makes the protease LasA – also called “staphylolysin” – which breaks down the cell wall of S. aureus.',
+ 'HQNO from P. aeruginosa blocks the respiration of S. aureus and pushes it into slow-growing small colony variants.',
+ 'Pyocyanin is a blue-green pigment of P. aeruginosa. It generates reactive oxygen species and damages host and competitor cells.',
+ 'Burkholderia cepacia resists many antibiotics and can trigger the dangerous “cepacia syndrome” in CF. Affected patients are therefore kept apart.',
+ 'The mould Aspergillus fumigatus is often found in CF airways. Its tiny spores are inhaled; some patients develop an allergic reaction (ABPA).',
+ 'EPO (erythropoietin) is a kidney hormone that boosts red blood cell production. Those cells are packed with hemoglobin – and so with heme, which S. aureus taps as an iron source.',
+ 'In CF, S. aureus is treated with drugs such as flucloxacillin – a β-lactam antibiotic that blocks cell wall synthesis. MRSA is resistant to it.'];
 let W=0,H=0,dpr=1;
 function resize(){const r=screen.getBoundingClientRect();dpr=Math.min(window.devicePixelRatio||1,2);W=r.width;H=r.height;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);if(ship)ship.y=Math.max(H*0.25,Math.min(H-40,ship.y));}
 const ro=new ResizeObserver(resize);ro.observe(screen);
@@ -232,44 +237,53 @@ const motes=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),z:Math.
 let ship=null,items=[],parts=[],pops=[],state='menu',score=0,lives=3,level=1,t=0,spawn=0,mspawn=1,shield=0,shake=0,hurt=0,banner=0;
 let lclock=0,boss=null,bossWarn=0,bossDone=0,bossBanner=0,bossReward='',mult=1,gold=0;
 let epoAt=-1,epo=0,epoLeft=0,epoSpawn=0;
+let scv=0,streak=0,dashT=0,dashCD=0,trail=[],noHit=0,st={};
 const keys={};let pointerX=null,pointerY=null;
 
-/* Level-Balance: alles hier anpassbar */
-const LEVEL_SECONDS=25;                                    // Dauer eines Levels
-const enemyInterval=l=>Math.max(0.22,1.5/(1+(l-1)*0.4));   // Sekunden zwischen Immun-Gegnern
-const enemySpeed=l=>Math.min(480,120+(l-1)*30);            // Geschwindigkeit Gegner
-const itemSpeed=l=>Math.min(300,110+(l-1)*15);             // Geschwindigkeit Nährstoffe & Co.
-const BOSS_EVERY=5;                                        // Boss in Level 5, 10, 15 …
-const BOSS_SECONDS=30;                                     // Dauer des Bosskampfs
-const WARN_SECONDS=3;                                      // Warnung vor dem Boss
-const shotSpeed=d=>Math.min(420,230+d*40);                 // Grund-Tempo der Boss-Geschosse (d = Boss-Runde 0,1,2 …)
-/* Die 4 Bosse und ihre Feuerraten (Sekunden zwischen Angriffen) stehen weiter unten in BOSSES */
-const SHIP_SPEED=483;                                      // Höchsttempo der Kolonie (vorher 420, +15 %)
-const SHIP_ACCEL=2070;                                     // Beschleunigung (vorher 1800, +15 %)
-const IRON_CHANCE=0.13;                                    // Anteil Eisen (Fe) an Sammelobjekten
-const EPO_CHANCE=0.001;                                    // EPO-Event: Chance pro Level (0,1 %)
-const EPO_SECONDS=3;                                       // Dauer des Häm-Regens
-const EPO_HEMES=18;                                        // so viele Häm fallen in dieser Zeit
-const HEME_CHANCE=0.012;                                   // Häm-Jackpot: ~1 von 80 Objekten (etwa 1x pro Minute)
-const hemeSpeed=l=>1.3*1.25*Math.max(enemySpeed(l),itemSpeed(l)*1.5); // 1,3x schneller als das schnellste andere Objekt
-const ENEMY_SIZES=[12,16,22,30,40];                        // Antikörper, Komplement, Neutrophil, Makrophage, NET
-const sizeRatio=l=>Math.min(1.6,0.45+(l-1)*0.12);          // >1: große Gegner häufiger als kleine
+/* Game balance: everything here can be tweaked */
+const LEVEL_SECONDS=25;                                    // length of one level (s)
+const enemyInterval=l=>Math.max(0.22,1.5/(1+(l-1)*0.4));   // seconds between immune enemies
+const enemySpeed=l=>Math.min(480,120+(l-1)*30);            // enemy speed
+const itemSpeed=l=>Math.min(300,110+(l-1)*15);             // speed of nutrients etc.
+const BOSS_EVERY=5;                                        // boss at levels 5, 10, 15 …
+const BOSS_SECONDS=30;                                     // boss fight length (s)
+const WARN_SECONDS=3;                                      // warning before the boss (s)
+const shotSpeed=d=>Math.min(420,230+d*40);                 // base speed of boss projectiles (d = boss round 0, 2, 4 …)
+/* The 4 bosses and their fire rates (seconds between attacks) are defined further down in BOSSES */
+const SHIP_SPEED=483;                                      // colony top speed
+const SHIP_ACCEL=2070;                                     // colony acceleration
+const IRON_CHANCE=0.13;                                    // share of iron (Fe) among collectibles
+const SCV_CHANCE=0.02;                                     // SCV power-up: share of collectibles (~once a minute)
+const SCV_SECONDS=5;                                       // how long the colony stays small (s)
+const STREAK_EVERY=10;                                     // streak bonus after every 10 pickups without a hit …
+const STREAK_BONUS=25;                                     // … worth this many extra points
+const DASH_SPEED=1100,DASH_TIME=0.16,DASH_COOLDOWN=3;      // dash: speed, duration, cooldown
+const EPO_CHANCE=0.001;                                    // EPO event: chance per level (0.1%)
+const EPO_SECONDS=3;                                       // length of the heme rain (s)
+const EPO_HEMES=18;                                        // number of hemes dropped in that time
+const HEME_CHANCE=0.012;                                   // heme jackpot: ~1 in 80 objects (about once a minute)
+const hemeSpeed=l=>1.3*1.25*Math.max(enemySpeed(l),itemSpeed(l)*1.5); // 1.3x faster than the fastest other object
+const ENEMY_SIZES=[12,16,22,30,40];                        // antibody, complement, neutrophil, macrophage, NET
+const sizeRatio=l=>Math.min(1.6,0.45+(l-1)*0.12);          // >1: large enemies more common than small ones
 
-function epoSafe(){if(boss||bossWarn>0)return false;const nb=Math.ceil((level+1)/BOSS_EVERY)*BOSS_EVERY;const untilBoss=(nb-1)*LEVEL_SECONDS-lclock;return untilBoss>8;} // kein EPO im/kurz vor dem Bosskampf
-function rollEpo(){if(epoAt<0&&Math.random()<EPO_CHANCE)epoAt=(level-1)*LEVEL_SECONDS+rnd(2,LEVEL_SECONDS-4);} // Zeitpunkt auf der Level-Uhr
-function reset(){epoAt=-1;epo=0;epoLeft=0;epoSpawn=0;ship={x:W/2,y:H-50,vx:0,vy:0};pointerX=null;items=[];parts=[];pops=[];lclock=0;boss=null;bossWarn=0;bossDone=0;bossBanner=0;bossReward='';gold=0;setMult(1);score=0;lives=3;level=1;t=0;spawn=0;mspawn=1;shield=0;shake=0;hurt=0;banner=0;hud();}
+function epoSafe(){if(boss||bossWarn>0)return false;const nb=Math.ceil((level+1)/BOSS_EVERY)*BOSS_EVERY;const untilBoss=(nb-1)*LEVEL_SECONDS-lclock;return untilBoss>8;} // no EPO during or just before a boss fight
+function rollEpo(){if(epoAt<0&&Math.random()<EPO_CHANCE)epoAt=(level-1)*LEVEL_SECONDS+rnd(2,LEVEL_SECONDS-4);} // drop time on the level clock
+function reset(){epoAt=-1;epo=0;epoLeft=0;epoSpawn=0;scv=0;streak=0;dashT=0;dashCD=0;trail=[];noHit=0;st={food:0,iron:0,heme:0,bosses:0,noHit:0,streak:0,dashes:0};ship={x:W/2,y:H-50,vx:0,vy:0};pointerX=null;items=[];parts=[];pops=[];lclock=0;boss=null;bossWarn=0;bossDone=0;bossBanner=0;bossReward='';gold=0;setMult(1);score=0;lives=3;level=1;t=0;spawn=0;mspawn=1;shield=0;shake=0;hurt=0;banner=0;hud();}
 function hud(){$('score').textContent=score;$('level').textContent=level;const L=$('lives');L.textContent='';
   const add=(txt,cls)=>{const sp=document.createElement('span');sp.textContent=txt;if(cls)sp.className=cls;L.append(sp);};
   const lv=Math.min(3,Math.max(lives,0));add('♥'.repeat(lv)+'♡'.repeat(3-lv));
   if(gold>0)add(gold>3?'♥×'+gold:'♥'.repeat(gold),'gold');
-  L.setAttribute('aria-label',Math.max(lives,0)+' Leben'+(gold?' und '+gold+' goldene':''));}
+  L.setAttribute('aria-label',Math.max(lives,0)+' lives'+(gold?' and '+gold+' golden':''));}
 function fact(){return FACTS[Math.floor(Math.random()*FACTS.length)];}
-function show(title,text,btn,f){nameForm.hidden=true;lbMsg.textContent='';ovTitle.textContent=title;ovText.textContent=text;ovFact.textContent=f||'';startBtn.textContent=btn;ov.hidden=false;startBtn.focus({preventScroll:true});}
+function show(title,text,btn,f){nameForm.hidden=true;$('ovStats').hidden=true;lbMsg.textContent='';ovTitle.textContent=title;ovText.textContent=text;ovFact.textContent=f||'';startBtn.textContent=btn;ov.hidden=false;startBtn.focus({preventScroll:true});}
 function start(){if(state==='pause'){state='play';ov.hidden=true;return;}reset();rollEpo();state='play';ov.hidden=true;}
-function pause(){if(state==='play'){state='pause';show('Pause','Die Kolonie ruht kurz im Schleim.','Weiter',fact());}else if(state==='pause')start();}
-function over(){state='over';let txt='Das Immunsystem hat dich erwischt – '+score+' Punkte.';if(score>best){best=score;try{localStorage.setItem('aureus-best',best)}catch(e){}$('best').textContent=best;txt+=' Neuer Rekord!';}show('Eliminiert',txt,'Neue Kolonie',fact());
+function pause(){if(state==='play'){state='pause';show('Paused','The colony rests in the mucus for a moment.','Resume',fact());}else if(state==='pause')start();}
+function over(){state='over';let txt='The immune system got you – '+score+' points.';if(score>best){best=score;try{localStorage.setItem('aureus-best',best)}catch(e){}$('best').textContent=best;txt+=' New best!';}show('Eliminated',txt,'New colony',fact());
+  const S=$('ovStats'),mm=Math.floor(t/60),ss=Math.floor(t%60);
+  S.textContent='Level '+level+' · '+st.bosses+(st.bosses===1?' boss':' bosses')+' beaten · survived '+mm+':'+String(ss).padStart(2,'0')+' min\n'+st.food+' nutrients · '+st.iron+' iron · '+st.heme+' heme\nLongest time without a hit: '+Math.floor(st.noHit)+' s · Best streak: '+st.streak+' · Dashes: '+st.dashes;
+  S.hidden=false;
   finalScore=score;loadTop(lastName);
-  if(score>0){nameForm.hidden=false;nameIn.value=lastName;lbMsg.textContent='Trag dich ins Leaderboard ein:';nameIn.focus({preventScroll:true});}}
+  if(score>0){nameForm.hidden=false;nameIn.value=lastName;lbMsg.textContent='Add yourself to the leaderboard:';nameIn.focus({preventScroll:true});}}
 
 function rnd(a,b){return a+Math.random()*(b-a)}
 function place(it,speed){it.x=rnd(it.r+6,W-it.r-6);it.y=-40;it.vy=speed*rnd(0.85,1.25);it.vx=0;it.seed=Math.random()*100;items.push(it);}
@@ -278,6 +292,7 @@ function addEnemy(){const s=pickSize(level);place({k:'enemy',s,r:ENEMY_SIZES[s]*
 function add(){
   const r=Math.random(),sp=itemSpeed(level);
   if(Math.random()<HEME_CHANCE){const it={k:'heme',r:12};place(it,1);it.vy=hemeSpeed(level);return;}
+  if(scv<=0&&Math.random()<SCV_CHANCE){place({k:'scv',r:12},sp);return;}
   if(r<0.05){if(shield<=0)place({k:'shield',r:14},sp);else place({k:'food',r:10,rot:rnd(0,6)},sp);}
   else if(r<0.05+IRON_CHANCE){const it={k:'iron',r:11};place(it,sp*1.5);it.vx=rnd(-50,50);}
   else place({k:'food',r:10,rot:rnd(0,6)},sp);
@@ -296,19 +311,19 @@ function setMult(m){mult=m;$('mult').hidden=m===1;}
 function bossSize(){const w=Math.min(W*0.62,440);return{w,h:w*0.36};}
 function shoot(x,y,a,sp,m,r){items.push({k:'shot',m,s:0,r,x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,rot:rnd(0,6),vr:rnd(-5,5),seed:Math.random()*100});}
 const BOSSES=[
- {name:'P. aeruginosa',warn:'P. aeruginosa greift an!',rate:d=>Math.max(0.16,0.38-d*0.05),
+ {name:'P. aeruginosa',warn:'P. aeruginosa attacks!',rate:d=>Math.max(0.16,0.38-d*0.05),
   move:(b,dt)=>{b.x+=((W/2+Math.sin(t*0.8)*(W/2-b.w/2-8))-b.x)*Math.min(1,dt*3);},
   attack:b=>{b.mouth=0.22;blip(180);const mx=b.x,my=b.y+b.h*0.42,base=Math.atan2(ship.y-my,ship.x-mx),n=Math.random()<0.4?3:1,sp=shotSpeed(b.d);
     for(let i=0;i<n;i++){const m=Math.floor(Math.random()*3);shoot(mx,my,base+(n>1?(i-1)*0.32:rnd(-0.18,0.18)),sp,m,[9,8,7][m]);}}},
- {name:'B. cepacia',warn:'Burkholderia cepacia greift an!',rate:d=>Math.max(0.5,1.0-d*0.07),
+ {name:'B. cepacia',warn:'Burkholderia cepacia attacks!',rate:d=>Math.max(0.5,1.0-d*0.07),
   move:(b,dt)=>{b.retarget-=dt;if(b.retarget<=0){b.tx=rnd(b.w/2+8,W-b.w/2-8);b.retarget=rnd(1,1.8);}b.x+=(b.tx-b.x)*Math.min(1,dt*2.6);},
   attack:b=>{b.mouth=0.3;blip(140);const mx=b.x,my=b.y+b.h*0.42,n=7+Math.min(b.d,5),spread=2.4,off=(b.flip=!b.flip)?0.5:0,sp=shotSpeed(b.d)*0.85;
     for(let i=0;i<n;i++){const a=Math.PI/2-spread/2+spread*(i+off)/(n-1+off);shoot(mx,my,a,sp,3+(i%2),8);}}},
- {name:'A. fumigatus',warn:'Aspergillus-Schimmelpilz greift an!',rate:d=>Math.max(0.06,0.13-d*0.012),
+ {name:'A. fumigatus',warn:'Aspergillus mould attacks!',rate:d=>Math.max(0.06,0.13-d*0.012),
   move:(b,dt)=>{b.x+=((W/2+Math.sin(t*0.45)*(W/2-b.w/2-8))-b.x)*Math.min(1,dt*2);},
   attack:b=>{if(Math.random()<0.1){b.mouth=0.2;blip(220);}const sp=shotSpeed(b.d)*0.65;
     shoot(b.x+rnd(-b.w/2,b.w/2),b.y-b.h*0.2,Math.PI/2+rnd(-0.12,0.12),sp*rnd(0.8,1.2),5,6);}},
- {name:'Antibiotika',warn:'Antibiotika-Therapie startet!',rate:d=>Math.max(0.07,0.13-d*0.008),
+ {name:'Antibiotics',warn:'Antibiotic therapy incoming!',rate:d=>Math.max(0.07,0.13-d*0.008),
   move:(b,dt)=>{b.x+=((W/2+Math.sin(t*0.5)*W*0.15)-b.x)*Math.min(1,dt*2);},
   attack:b=>{b.spin+=0.42;b.mouth=0.12;const mx=b.x,my=b.y+b.h*0.3,a=Math.PI/2+Math.sin(b.spin)*1.25,sp=shotSpeed(b.d)*0.9;
     shoot(mx,my,a,sp,6+(Math.floor(b.spin*2)%2),8);if(Math.floor(b.spin*3)%3===0)blip(320);}}];
@@ -319,10 +334,15 @@ function updateBoss(dt){const b=boss,B=BOSSES[b.type];Object.assign(b,bossSize()
   if(b.phase==='in'){b.ty=H*0.06+b.h/2;b.y+=(b.ty-b.y)*Math.min(1,dt*2.2);if(Math.abs(b.ty-b.y)<3)b.phase='fight';}
   else if(b.phase==='fight'){b.time-=dt;B.move(b,dt);
     if(epo<=0)b.fire-=dt;if(b.fire<=0){B.attack(b);b.fire=B.rate(b.d)*rnd(0.85,1.15);}
-    if(b.time<=0){b.phase='out';setMult(1);bossBanner=3;
-      if(lives<3){lives=3;bossReward='Leben wieder aufgefüllt ♥♥♥';}else{gold++;bossReward='Keins verloren – goldenes Herz! ♥';}
+    if(b.time<=0){b.phase='out';setMult(1);bossBanner=3;st.bosses++;
+      if(lives<3){lives=3;bossReward='Lives refilled ♥♥♥';}else{gold++;bossReward='No hearts lost – golden heart! ♥';}
       burst(ship.x,ship.y,'#ffcf3f',30);hud();}}
   else{b.y-=dt*H*0.5;if(b.y<-b.h)boss=null;}}
+function good(kind,x,y){st[kind]++;streak++;if(streak%STREAK_EVERY===0){const v=STREAK_BONUS*mult;score+=v;st.streak=Math.max(st.streak,streak);pop(x,y-26,'Streak '+streak+'! +'+v,'#ffffff');blip(760);}st.streak=Math.max(st.streak,streak);}
+function dash(){if(state!=='play'||dashCD>0||!ship)return;
+  let dx=(keys.arrowleft||keys.a?-1:0)+(keys.arrowright||keys.d?1:0),dy=(keys.arrowup||keys.w?-1:0)+(keys.arrowdown||keys.s?1:0);
+  if(!dx&&!dy){if(pointerX!==null&&Math.hypot(pointerX-ship.x,pointerY-ship.y)>8){dx=pointerX-ship.x;dy=pointerY-ship.y;}else if(Math.hypot(ship.vx,ship.vy)>30){dx=ship.vx;dy=ship.vy;}else dy=-1;}
+  const d=Math.hypot(dx,dy)||1;ship.vx=dx/d*DASH_SPEED;ship.vy=dy/d*DASH_SPEED;dashT=DASH_TIME;dashCD=DASH_COOLDOWN;st.dashes++;blip(520);}
 function update(dt){
   t+=dt;if(!boss&&bossWarn<=0)lclock+=dt;
   const nl=1+Math.floor(lclock/LEVEL_SECONDS);
@@ -330,10 +350,12 @@ function update(dt){
   if(bossWarn>0){bossWarn-=dt;if(bossWarn<=0)spawnBoss();}
   if(boss)updateBoss(dt);
   bossBanner=Math.max(0,bossBanner-dt);
-  const acc=SHIP_ACCEL,max=SHIP_SPEED,cl=(v,m)=>Math.max(-m,Math.min(m,v));
+  const slow=scv>0?0.85:1,acc=SHIP_ACCEL*slow,max=SHIP_SPEED*slow,cl=(v,m)=>Math.max(-m,Math.min(m,v));
+  dashCD=Math.max(0,dashCD-dt);scv=Math.max(0,scv-dt);noHit+=dt;st.noHit=Math.max(st.noHit,noHit);
   const dx=(keys.arrowleft||keys.a?-1:0)+(keys.arrowright||keys.d?1:0);
   const dy=(keys.arrowup||keys.w?-1:0)+(keys.arrowdown||keys.s?1:0);
-  if(pointerX!==null){ship.vx=cl((pointerX-ship.x)*10,max*1.4);ship.vy=cl((pointerY-ship.y)*10,max*1.4);}
+  if(dashT>0){dashT-=dt;trail.push({x:ship.x,y:ship.y,l:0.25});}
+  else if(pointerX!==null){ship.vx=cl((pointerX-ship.x)*10,max*1.4);ship.vy=cl((pointerY-ship.y)*10,max*1.4);}
   else{
     if(dx)ship.vx=cl(ship.vx+dx*acc*dt,max);else ship.vx*=Math.pow(0.0005,dt);
     if(dy)ship.vy=cl(ship.vy+dy*acc*dt,max);else ship.vy*=Math.pow(0.0005,dt);
@@ -346,21 +368,23 @@ function update(dt){
   if(epo<=0)mspawn-=dt*(boss&&boss.phase==='fight'?0.35:1);if(mspawn<=0){addEnemy();mspawn=enemyInterval(level)*rnd(0.7,1.3);}
   banner=Math.max(0,banner-dt);shield=Math.max(0,shield-dt);shake=Math.max(0,shake-dt);hurt=Math.max(0,hurt-dt);
   for(const it of items){it.y+=it.vy*dt;it.x+=it.vx*dt;if(it.rot!==undefined)it.rot+=(it.vr||1.2)*dt;
-    const hitR=(it.k==='enemy'?it.r*0.85+12:it.k==='shot'?it.r+9:it.r+18)+(shield>0?12:0);
+    const hitR=(it.k==='enemy'?it.r*0.85+12:it.k==='shot'?it.r+9:it.r+18)+(shield>0?12:0)-(scv>0&&shield<=0?6:0);
     if(!it.dead&&Math.hypot(it.x-ship.x,it.y-ship.y)<hitR){
       it.dead=true;
-      if(it.k==='food'){score+=10*mult;burst(it.x,it.y,'#5fe0c0',12);pop(it.x,it.y,'+'+10*mult,'#5fe0c0');}
-      else if(it.k==='iron'){score+=50*mult;burst(it.x,it.y,'#ff8a3d',24);pop(it.x,it.y,'+'+50*mult,'#ffb27a');}
+      if(it.k==='food'){good('food',it.x,it.y);score+=10*mult;burst(it.x,it.y,'#5fe0c0',12);pop(it.x,it.y,'+'+10*mult,'#5fe0c0');}
+      else if(it.k==='iron'){good('iron',it.x,it.y);score+=50*mult;burst(it.x,it.y,'#ff8a3d',24);pop(it.x,it.y,'+'+50*mult,'#ffb27a');}
       else if(it.k==='epo'){epo=EPO_SECONDS;epoLeft=EPO_HEMES;epoSpawn=0;burst(it.x,it.y,'#ff9de2',50);burst(it.x,it.y,'#ffe680',40);pop(it.x,it.y,'EPO!!','#ff9de2');blip(660);blip(880);}
-      else if(it.k==='heme'){score+=200*mult;burst(it.x,it.y,'#ffe680',40);burst(it.x,it.y,'#ff9de2',20);pop(it.x,it.y,'+'+200*mult+'!','#ffe680');}
-      else if(it.k==='shield'){shield=5;burst(it.x,it.y,'#8be36b',20);pop(it.x,it.y,'Schutz!','#8be36b');}
+      else if(it.k==='heme'){good('heme',it.x,it.y);score+=200*mult;burst(it.x,it.y,'#ffe680',40);burst(it.x,it.y,'#ff9de2',20);pop(it.x,it.y,'+'+200*mult+'!','#ffe680');}
+      else if(it.k==='scv'){scv=SCV_SECONDS;burst(it.x,it.y,'#fff3b0',24);pop(it.x,it.y,'SCV – small & tough!','#fff3b0');}
+      else if(it.k==='shield'){shield=5;burst(it.x,it.y,'#8be36b',20);pop(it.x,it.y,'Shield!','#8be36b');}
       else if(shield>0){const v=5*(it.s+1)*mult;score+=v;burst(it.x,it.y,'#8be36b',12+it.s*6);pop(it.x,it.y,'+'+v,'#8be36b');}
-      else if(hurt<=0){hurt=1.2;shake=.3+it.s*.08;if(gold>0){gold--;burst(it.x,it.y,'#ffcf3f',20+it.s*8);pop(it.x,it.y,'−1 goldenes ♥','#ffcf3f');}else{lives--;burst(it.x,it.y,'#ff6b6b',20+it.s*8);pop(it.x,it.y,'−1 ♥','#ff6b6b');if(lives<=0){hud();over();}}}
+      else if(hurt<=0){hurt=1.2;shake=.3+it.s*.08;streak=0;noHit=0;if(gold>0){gold--;burst(it.x,it.y,'#ffcf3f',20+it.s*8);pop(it.x,it.y,'−1 golden ♥','#ffcf3f');}else{lives--;burst(it.x,it.y,'#ff6b6b',20+it.s*8);pop(it.x,it.y,'−1 ♥','#ff6b6b');if(lives<=0){hud();over();}}}
       hud();
     }
     if(it.y>H+60||it.x<-60||it.x>W+60)it.dead=true;
   }
   items=items.filter(i=>!i.dead);
+  for(const q of trail)q.l-=dt;trail=trail.filter(q=>q.l>0);
   for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=150*dt;p.vx*=0.98;p.l-=dt;}
   parts=parts.filter(p=>p.l>0);
   for(const p of pops){p.y-=50*dt;p.l-=dt;}pops=pops.filter(p=>p.l>0);
@@ -370,13 +394,17 @@ function update(dt){
 function coccus(x,y,r){const g=ctx.createRadialGradient(x-r*.35,y-r*.35,r*.1,x,y,r);g.addColorStop(0,'#fff3b0');g.addColorStop(.55,'#ffcf3f');g.addColorStop(1,'#c98a0c');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fill();ctx.strokeStyle='#8a5a0a88';ctx.lineWidth=1;ctx.stroke();}
 const CLUSTER=[[-12,2],[0,4],[12,2],[-6,-8],[6,-8],[0,-19],[-6,14],[6,14]];
 function drawShip(){
-  const {x,y}=ship;ctx.save();ctx.translate(x,y);ctx.rotate(ship.vx/1200);
+  const {x,y}=ship,sc=scv>0?(scv<1?0.55+0.45*(1-scv):0.55):1;
+  for(const q of trail){ctx.save();ctx.globalAlpha=q.l*1.6;ctx.translate(q.x,q.y);ctx.scale(sc,sc);ctx.fillStyle='#ffcf3f';CLUSTER.forEach(([cx,cy])=>{ctx.beginPath();ctx.arc(cx,cy,7,0,6.2832);ctx.fill();});ctx.restore();}
+  if(dashCD>0&&state==='play'){ctx.save();ctx.strokeStyle='#ffffff55';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y-2,28*sc+4,-Math.PI/2,-Math.PI/2+6.2832*(1-dashCD/DASH_COOLDOWN));ctx.stroke();ctx.restore();}
+  ctx.save();ctx.translate(x,y);ctx.rotate(ship.vx/1200);ctx.scale(sc,sc);
+  if(scv>0)ctx.filter='saturate(0.45) brightness(1.15)';
   if(hurt>0&&Math.floor(hurt*12)%2)ctx.globalAlpha=.35;
   ctx.shadowColor='#ffcf3f';ctx.shadowBlur=14;
   CLUSTER.forEach(([cx,cy],i)=>coccus(cx+Math.sin(t*3+i)*0.8,cy+Math.cos(t*2.6+i)*0.8,7.5));
   ctx.restore();
   if(shield>0){ctx.save();ctx.globalAlpha=shield<1.5?(Math.sin(t*20)+1)/2*.5+.2:.55;ctx.fillStyle='#8be36b33';ctx.strokeStyle='#8be36b';ctx.lineWidth=3;ctx.shadowColor='#8be36b';ctx.shadowBlur=14;
-    ctx.beginPath();for(let i=0;i<=24;i++){const a=i/24*6.2832,rr=34+Math.sin(a*5+t*4)*3;ctx.lineTo(x+Math.cos(a)*rr,y-2+Math.sin(a)*rr);}ctx.fill();ctx.stroke();ctx.restore();}
+    ctx.beginPath();for(let i=0;i<=24;i++){const a=i/24*6.2832,rr=(34+Math.sin(a*5+t*4)*3)*sc;ctx.lineTo(x+Math.cos(a)*rr,y-2+Math.sin(a)*rr);}ctx.fill();ctx.stroke();ctx.restore();}
 }
 function blobPath(r,n,seed,wob){ctx.beginPath();for(let i=0;i<=n;i++){const a=i/n*6.2832,rr=r*(0.82+0.18*Math.sin(seed+i*1.9+t*wob));ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}ctx.closePath();}
 function drawEnemy(it){
@@ -459,7 +487,7 @@ function drawAbx(b){const {x,y,h}=b,w=b.w*.7,R=h/2,tilt=Math.sin(b.spin*0.5)*0.1
     ctx.fillStyle='#00000018';ctx.fillRect(-w/2,R*.35,w,R);ctx.fillStyle='#ffffff55';ctx.fillRect(-w/2,-R*.75,w,R*.22);ctx.restore();
   ctx.strokeStyle='#7a1020';ctx.lineWidth=3;rod(0,0,w,R);ctx.stroke();ctx.beginPath();ctx.moveTo(0,-R);ctx.lineTo(0,R);ctx.stroke();
   ctx.restore();
-  bEyes(b,x,y-R*.12,w*.2,R*.27,'#5a0a18');bMouth(b,x,y+R*.42,w*.2,R,'#ff5a6e88');bLabel('Antibiotika',x,y-R*.72,R,'#5a0a18');}
+  bEyes(b,x,y-R*.12,w*.2,R*.27,'#5a0a18');bMouth(b,x,y+R*.42,w*.2,R,'#ff5a6e88');bLabel('Antibiotics',x,y-R*.72,R,'#5a0a18');}
 function drawBoss(b){ctx.save();[drawPA,drawBcc,drawAsp,drawAbx][b.type||0](b);ctx.restore();}
 function drawItem(it){
   if(it.k==='enemy'||it.k==='shot')aura(it);else sparkle(it);
@@ -467,6 +495,9 @@ function drawItem(it){
   if(it.k==='food'){ctx.translate(it.x,it.y);ctx.rotate(it.rot);ctx.shadowColor='#5fe0c0';ctx.shadowBlur=12;ctx.fillStyle='#5fe0c0';ctx.beginPath();for(let i=0;i<6;i++){const a=i*1.0472;ctx.lineTo(Math.cos(a)*it.r,Math.sin(a)*it.r);}ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#d6fff4';ctx.beginPath();ctx.arc(0,0,it.r*.35,0,6.2832);ctx.fill();}
   else if(it.k==='iron'){const tx=it.x-it.vx*.3,ty=it.y-50,g=ctx.createLinearGradient(it.x,it.y,tx,ty);g.addColorStop(0,'#ff8a3dbb');g.addColorStop(1,'#ff8a3d00');ctx.strokeStyle=g;ctx.lineWidth=it.r*1.2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(it.x,it.y);ctx.lineTo(tx,ty);ctx.stroke();
     ctx.shadowColor='#ff8a3d';ctx.shadowBlur=18;ctx.fillStyle='#ff8a3d';ctx.beginPath();ctx.arc(it.x,it.y,it.r,0,6.2832);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#2a0c20';ctx.font='800 '+Math.round(it.r*1.05)+'px "Baloo 2",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Fe',it.x,it.y+1);}
+  else if(it.k==='scv'){const r=it.r;ctx.translate(it.x,it.y);ctx.rotate(t*1.5);ctx.strokeStyle='#ffffffcc';ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(0,0,r*1.15,0,6.2832);ctx.stroke();ctx.setLineDash([]);
+    ctx.rotate(-t*1.5);ctx.shadowColor='#fff3b0';ctx.shadowBlur=12;[[-r*.35,r*.15],[r*.35,r*.15],[0,-r*.4]].forEach(([a,b])=>{const g=ctx.createRadialGradient(a-2,b-2,1,a,b,r*.36);g.addColorStop(0,'#ffffff');g.addColorStop(1,'#e8d9a0');ctx.fillStyle=g;ctx.beginPath();ctx.arc(a,b,r*.36,0,6.2832);ctx.fill();});
+    ctx.shadowBlur=0;ctx.fillStyle='#fff';ctx.font='800 '+Math.round(r*.62)+'px "Baloo 2",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeStyle='#14060f';ctx.lineWidth=3;ctx.strokeText('SCV',0,r*1.75);ctx.fillText('SCV',0,r*1.75);}
   else if(it.k==='epo'){const r=it.r;ctx.translate(it.x,it.y);
     for(let i=0;i<3;i++){ctx.strokeStyle=['#ff9de2','#ffe680','#9de2ff'][i];ctx.lineWidth=2.5;ctx.globalAlpha=.85;ctx.beginPath();ctx.arc(0,0,r*(1.45+i*.28),t*3+i*2.1,t*3+i*2.1+3.6);ctx.stroke();}ctx.globalAlpha=1;
     const g=ctx.createLinearGradient(0,-r*1.3,0,r);g.addColorStop(0,'#ffffff');g.addColorStop(1,'#ff9de2');ctx.shadowColor='#ff9de2';ctx.shadowBlur=26;ctx.fillStyle=g;
@@ -508,26 +539,26 @@ function draw(){
   if(bossWarn>0&&state==='play'){const m=Math.min(W,H),f=(Math.sin(t*14)+1)/2,v=ctx.createRadialGradient(W/2,H/2,m*.3,W/2,H/2,Math.max(W,H)*.75);
     v.addColorStop(0,'rgba(255,0,50,0)');v.addColorStop(1,'rgba(255,0,50,'+(0.25+0.4*f).toFixed(2)+')');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
     ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000';ctx.shadowBlur=14;
-    ctx.fillStyle=f>0.5?'#ffffff':'#ff3355';ctx.font='800 '+Math.round(m*0.12)+'px "Baloo 2",sans-serif';ctx.fillText('⚠ ACHTUNG ⚠',W/2,H*0.4);
+    ctx.fillStyle=f>0.5?'#ffffff':'#ff3355';ctx.font='800 '+Math.round(m*0.12)+'px "Baloo 2",sans-serif';ctx.fillText('⚠ WARNING ⚠',W/2,H*0.4);
     ctx.fillStyle='#ffd0d8';ctx.font='700 '+Math.round(m*0.05)+'px "Baloo 2",sans-serif';ctx.fillText(nextBoss().warn,W/2,H*0.4+m*0.1);
-    ctx.fillText('Bosskampf – ×2 Punkte',W/2,H*0.4+m*0.16);ctx.shadowBlur=0;}
+    ctx.fillText('Boss fight – double points',W/2,H*0.4+m*0.16);ctx.shadowBlur=0;}
   if(epo>0&&state==='play'){const m=Math.min(W,H),f=(Math.sin(t*10)+1)/2,v=ctx.createRadialGradient(W/2,H/2,m*.3,W/2,H/2,Math.max(W,H)*.75);
     v.addColorStop(0,'rgba(255,230,128,0)');v.addColorStop(1,'rgba(255,190,90,'+(0.18+0.18*f).toFixed(2)+')');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
     ctx.fillStyle='#ffe680';ctx.fillRect(0,5,W*Math.max(0,epo/EPO_SECONDS),5);
     ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000a';ctx.shadowBlur=12;ctx.fillStyle='#ffe680';ctx.font='800 '+Math.round(m*0.075)+'px "Baloo 2",sans-serif';
-    ctx.fillText('EPO! Häm-Regen '+epo.toFixed(1)+' s',W/2,H*0.32);ctx.shadowBlur=0;}
+    ctx.fillText('EPO! Heme rain '+epo.toFixed(1)+' s',W/2,H*0.32);ctx.shadowBlur=0;}
   if(bossBanner>0&&state==='play'){const m=Math.min(W,H);ctx.globalAlpha=Math.min(1,bossBanner);ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000a';ctx.shadowBlur=12;
-    ctx.fillStyle='#8be36b';ctx.font='800 '+Math.round(m*0.1)+'px "Baloo 2",sans-serif';ctx.fillText('Boss überstanden!',W/2,H*0.42);ctx.fillStyle='#ffcf3f';ctx.font='700 '+Math.round(m*0.05)+'px "Baloo 2",sans-serif';ctx.fillText(bossReward,W/2,H*0.42+m*0.09);ctx.globalAlpha=1;ctx.shadowBlur=0;}
+    ctx.fillStyle='#8be36b';ctx.font='800 '+Math.round(m*0.1)+'px "Baloo 2",sans-serif';ctx.fillText('Boss survived!',W/2,H*0.42);ctx.fillStyle='#ffcf3f';ctx.font='700 '+Math.round(m*0.05)+'px "Baloo 2",sans-serif';ctx.fillText(bossReward,W/2,H*0.42+m*0.09);ctx.globalAlpha=1;ctx.shadowBlur=0;}
   if(banner>0&&state==='play'){const m=Math.min(W,H);ctx.globalAlpha=Math.min(1,banner);ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000a';ctx.shadowBlur=12;
     ctx.fillStyle='#ffcf3f';ctx.font='800 '+Math.round(m*0.11)+'px "Baloo 2",sans-serif';ctx.fillText('Level '+level,W/2,H*0.42);
-    ctx.fillStyle='#c9b6ff';ctx.font='700 '+Math.round(m*0.045)+'px "Baloo 2",sans-serif';ctx.fillText('Das Immunsystem rüstet auf!',W/2,H*0.42+m*0.09);ctx.globalAlpha=1;ctx.shadowBlur=0;}
+    ctx.fillStyle='#c9b6ff';ctx.font='700 '+Math.round(m*0.045)+'px "Baloo 2",sans-serif';ctx.fillText('The immune system is gearing up!',W/2,H*0.42+m*0.09);ctx.globalAlpha=1;ctx.shadowBlur=0;}
   ctx.restore();
 }
 
 function icons(){const main=ctx,tt=t;t=0.6;
   for(const c of document.querySelectorAll('.ico')){const d=Math.min(window.devicePixelRatio||1,2),S=48;c.width=S*d;c.height=S*d;ctx=c.getContext('2d');ctx.setTransform(d,0,0,d,0,0);
     const k=c.dataset.k,s=+c.dataset.s||0,it={k,s,x:S/2,y:S/2+(k==='enemy'?2:2),seed:3+s,rot:k==='enemy'?0:0.3,vx:0};
-    if(k==='enemy')it.r=[9,10,11,12,13][s];else if(k==='heme'){it.r=11;it.vy=0;}else if(k==='epo'){it.r=9;it.y+=3;}else if(k==='shield')it.r=10;else it.r=9;
+    if(k==='enemy')it.r=[9,10,11,12,13][s];else if(k==='heme'){it.r=11;it.vy=0;}else if(k==='scv'){it.r=10;it.y-=5;}else if(k==='epo'){it.r=9;it.y+=3;}else if(k==='shield')it.r=10;else it.r=9;
     if(k==='iron'){it.x-=2;}
     if(k==='boss'){c.width=96*d;ctx.setTransform(d,0,0,d,0,0);drawBoss(s===2?{type:2,x:48,y:30,w:80,h:24,mouth:0.1,seed:2,spin:0}:{type:s,x:s===0?44:48,y:26,w:s===0?72:84,h:s===0?26:28,mouth:0.1,seed:2,spin:0});continue;}
     drawItem(it);}
@@ -543,16 +574,19 @@ function loop(now){const dt=Math.min((now-last)/1000,0.05);last=now;
 requestAnimationFrame(loop);
 
 startBtn.addEventListener('click',()=>{audio();start();});
+$('dashBtn').addEventListener('click',e=>{e.currentTarget.blur();dash();});
 const soundBtn=$('soundBtn');const paintSound=()=>{soundBtn.textContent=muted?'🔇':'🔊';soundBtn.setAttribute('aria-pressed',String(!muted));};paintSound();
 soundBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('aureus-muted',muted?'1':'0')}catch(e){}paintSound();});
 $('pauseBtn').addEventListener('click',()=>{if(state==='play'||state==='pause')pause();});
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
   if(['arrowleft','arrowright','arrowup','arrowdown','a','d','w','s'].includes(k)){keys[k]=true;pointerX=null;e.preventDefault();}
   if(k==='p'||k==='escape')pause();
+  if((k===' '||k==='shift')&&state==='play'){e.preventDefault();dash();return;}
   if((k===' '||k==='enter')&&state!=='play'&&document.activeElement!==startBtn){e.preventDefault();start();}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 function pt(e){const r=screen.getBoundingClientRect();pointerX=e.clientX-r.left;pointerY=e.clientY-r.top-(e.pointerType==='mouse'?0:60);}
-screen.addEventListener('pointerdown',e=>{if(state==='play'){pt(e);screen.setPointerCapture(e.pointerId);}});
+let lastTap=0;
+screen.addEventListener('pointerdown',e=>{if(state==='play'&&e.pointerType!=='mouse'){const n=performance.now();if(n-lastTap<280)dash();lastTap=n;}if(state==='play'){pt(e);screen.setPointerCapture(e.pointerId);}});
 screen.addEventListener('pointermove',e=>{if(state==='play'&&(e.pointerType==='mouse'||pointerX!==null))pt(e);});
 screen.addEventListener('pointerup',e=>{if(e.pointerType!=='mouse')pointerX=null;});
 screen.addEventListener('pointerleave',()=>{pointerX=null;});
