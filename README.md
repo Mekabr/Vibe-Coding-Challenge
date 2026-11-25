@@ -1,0 +1,52 @@
+# Aureus – Überleben in der CF-Lunge
+
+Ein kleines Arcade-Lernspiel für den Browser, entstanden in der Vibe-Coding-Challenge.
+Du steuerst eine Kolonie *Staphylococcus aureus* durch den zähen Schleim einer Lunge
+mit zystischer Fibrose (CF), sammelst Nährstoffe und weichst dem Immunsystem aus.
+
+## Spielen
+
+`index.html` im Browser öffnen – fertig. Keine Installation, keine Abhängigkeiten.
+
+Mit GitHub Pages (Settings → Pages → Branch `main`) ist das Spiel auch online spielbar.
+
+## Steuerung
+
+| Aktion | Tastatur | Maus / Touch |
+|---|---|---|
+| Bewegen | Pfeiltasten oder W A S D | Zeiger bzw. Finger folgen |
+| Pause | P oder Esc | Pause-Knopf oben rechts |
+| Starten | Leertaste oder Enter | „Infektion starten“ |
+
+## Regeln
+
+**Sammeln**
+- **Nährstoff** (türkis): +10 Punkte
+- **Eisen (Fe)** (orange): +50 Punkte
+- **Biofilm** (grün): 5 Sekunden Schutz – gerammte Immunzellen geben Bonuspunkte
+
+**Ausweichen** – fünf Gegner, von klein nach groß:
+Antikörper → Komplement → Neutrophil → Makrophage → NET (Neutrophilen-Netz).
+Jeder Treffer kostet ein Leben, du hast drei.
+
+Alle 40 Sekunden steigt das Level: Es kommen mehr Immun-Gegner, sie werden schneller,
+und der Anteil der großen wächst. Dein Rekord wird im Browser gespeichert.
+
+## Biologischer Hintergrund (vereinfacht)
+
+- Bei CF ist der CFTR-Kanal defekt; der Atemwegsschleim wird zäh und schlecht abtransportiert.
+- *S. aureus* gehört zu den frühesten und häufigsten Keimen in CF-Lungen, besonders bei Kindern.
+- Das goldene Pigment Staphyloxanthin schützt vor reaktiven Sauerstoffspezies der Neutrophilen.
+- Im Biofilm überleben die Bakterien Antibiotika und Immunangriffe besser.
+- Der Körper hält Eisen knapp („nutritional immunity“), deshalb ist es für Bakterien wertvoll.
+
+Das Spiel ist stark vereinfacht und nicht maßstabsgetreu.
+
+## Balance anpassen
+
+Alle Werte stehen gesammelt im Script von `index.html` unter dem Kommentar `Level-Balance`:
+
+- `LEVEL_SECONDS` – Dauer eines Levels
+- `enemyInterval` – Abstand zwischen Immun-Gegnern
+- `enemySpeed` / `itemSpeed` – Geschwindigkeiten
+- `ENEMY_SIZES` / `sizeRatio` – Gegnergrößen und wie schnell große häufiger werden
