@@ -146,13 +146,13 @@ kbd{font:inherit;font-weight:700;background:var(--case);color:#f6e9f1;border-rad
       </ul>
     </section>
     <section class="grp boss">
-      <h3>☠ Boss alle 10 Level <small>Warnung, dann 30 s überleben – dabei ×2 Punkte</small></h3>
+      <h3>☠ Boss alle 5 Level <small>Warnung, dann 30 s überleben – dabei ×2 Punkte</small></h3>
       <p class="reward">Nach jedem Boss: fehlende Herzen werden aufgefüllt. Hast du kein normales Herz verloren, gibt es stattdessen ein <b class="g">goldenes Herz ♥</b> – es wird bei Treffern zuerst verbraucht, kommt nicht zurück und lässt sich stapeln.</p>
       <ul class="legend">
-        <li><canvas class="ico wide" data-k="boss" data-s="0"></canvas><span><b>P. aeruginosa</b> · Level 10, 50 … – spuckt gezielt Pyocyanin, LasA &amp; HQNO</span></li>
-        <li><canvas class="ico wide" data-k="boss" data-s="1"></canvas><span><b>B. cepacia</b> · Level 20, 60 … – springt umher, feuert Fächer-Salven</span></li>
-        <li><canvas class="ico wide" data-k="boss" data-s="2"></canvas><span><b>A. fumigatus</b> · Level 30, 70 … – Schimmelpilz, lässt Sporen regnen</span></li>
-        <li><canvas class="ico wide" data-k="boss" data-s="3"></canvas><span><b>Antibiotika</b> · Level 40, 80 … – β-Laktam-Spirale gegen S. aureus</span></li>
+        <li><canvas class="ico wide" data-k="boss" data-s="0"></canvas><span><b>P. aeruginosa</b> · Level 5, 25, 45 … – spuckt gezielt Pyocyanin, LasA &amp; HQNO</span></li>
+        <li><canvas class="ico wide" data-k="boss" data-s="1"></canvas><span><b>B. cepacia</b> · Level 10, 30, 50 … – springt umher, feuert Fächer-Salven</span></li>
+        <li><canvas class="ico wide" data-k="boss" data-s="2"></canvas><span><b>A. fumigatus</b> · Level 15, 35, 55 … – Schimmelpilz, lässt Sporen regnen</span></li>
+        <li><canvas class="ico wide" data-k="boss" data-s="3"></canvas><span><b>Antibiotika</b> · Level 20, 40, 60 … – β-Laktam-Spirale gegen S. aureus</span></li>
       </ul>
     </section>
   </div>
@@ -232,11 +232,11 @@ let lclock=0,boss=null,bossWarn=0,bossDone=0,bossBanner=0,bossReward='',mult=1,g
 const keys={};let pointerX=null,pointerY=null;
 
 /* Level-Balance: alles hier anpassbar */
-const LEVEL_SECONDS=20;                                    // Dauer eines Levels
+const LEVEL_SECONDS=25;                                    // Dauer eines Levels
 const enemyInterval=l=>Math.max(0.22,1.5/(1+(l-1)*0.4));   // Sekunden zwischen Immun-Gegnern
 const enemySpeed=l=>Math.min(480,120+(l-1)*30);            // Geschwindigkeit Gegner
 const itemSpeed=l=>Math.min(300,110+(l-1)*15);             // Geschwindigkeit Nährstoffe & Co.
-const BOSS_EVERY=10;                                       // Boss in Level 10, 20, 30 …
+const BOSS_EVERY=5;                                        // Boss in Level 5, 10, 15 …
 const BOSS_SECONDS=30;                                     // Dauer des Bosskampfs
 const WARN_SECONDS=3;                                      // Warnung vor dem Boss
 const shotSpeed=d=>Math.min(420,230+d*40);                 // Grund-Tempo der Boss-Geschosse (d = Boss-Runde 0,1,2 …)

@@ -30,22 +30,22 @@ Mit GitHub Pages (Settings → Pages → Branch `main`) ist das Spiel auch onlin
 Antikörper → Komplement → Neutrophil → Makrophage → NET (Neutrophilen-Netz).
 Jeder Treffer kostet ein Leben, du hast drei.
 
-**Bosskampf** – alle 10 Level: Nach einer Warnung (Blinken + Sirene, Ton über 🔊 abschaltbar)
+**Bosskampf** – alle 5 Level: Nach einer Warnung (Blinken + Sirene, Ton über 🔊 abschaltbar)
 schiebt sich ein Boss von oben ins Bild. 30 Sekunden überleben – dabei gibt es **doppelte Punkte**,
-und die Level-Uhr steht still. Vier Bosse wechseln sich ab, ab Level 50 werden sie stärker:
+und die Level-Uhr steht still. Vier Bosse wechseln sich ab, ab Level 25 werden sie stärker:
 
 | Level | Boss | Angriff |
 |---|---|---|
-| 10, 50, 90 … | *Pseudomonas aeruginosa* | spuckt gezielt Pyocyanin, LasA und HQNO |
-| 20, 60 … | *Burkholderia cepacia* | springt umher, feuert Fächer-Salven |
-| 30, 70 … | *Aspergillus fumigatus* (Schimmelpilz) | lässt Sporen regnen |
-| 40, 80 … | Antibiotika-Therapie | rotierende β-Laktam-Spirale |
+| 5, 25, 45 … | *Pseudomonas aeruginosa* | spuckt gezielt Pyocyanin, LasA und HQNO |
+| 10, 30, 50 … | *Burkholderia cepacia* | springt umher, feuert Fächer-Salven |
+| 15, 35, 55 … | *Aspergillus fumigatus* (Schimmelpilz) | lässt Sporen regnen |
+| 20, 40, 60 … | Antibiotika-Therapie | rotierende β-Laktam-Spirale |
 
 **Belohnung nach jedem Boss:** Fehlen normale Herzen, werden sie wieder auf drei aufgefüllt.
 Sind alle drei noch da, gibt es stattdessen ein **goldenes Herz**. Goldene Herzen werden bei
 Treffern zuerst verbraucht, kommen nicht zurück und lassen sich stapeln.
 
-Alle 20 Sekunden steigt das Level: Es kommen mehr Immun-Gegner, sie werden schneller,
+Alle 25 Sekunden steigt das Level: Es kommen mehr Immun-Gegner, sie werden schneller,
 und der Anteil der großen wächst. Dein Rekord wird im Browser gespeichert.
 
 ## Leaderboard
