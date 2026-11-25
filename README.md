@@ -24,8 +24,8 @@ Mit GitHub Pages (Settings → Pages → Branch `main`) ist das Spiel auch onlin
 - **Nährstoff** (türkis): +10 Punkte
 - **Eisen (Fe)** (orange): +50 Punkte
 - **Häm-Jackpot** (goldener Stern „200“): +200 Punkte – sehr selten und 1,3× schneller als alles andere
-- **EPO** (rosa Tropfen): ultraselten – nur in 1 % aller Spiele. Löst 5 Sekunden **Häm-Regen** aus:
-  keine neuen Gegner, und 30 Häm fallen vom Himmel. Während eines Bosskampfs kommt kein EPO.
+- **EPO** (rosa Tropfen): ultraselten – nur in 1 % aller Spiele. Löst 3 Sekunden **Häm-Regen** aus:
+  keine neuen Gegner, und 18 Häm fallen vom Himmel. Während eines Bosskampfs kommt kein EPO.
 - **Biofilm** (grün): 5 Sekunden Schutz – gerammte Immunzellen geben Bonuspunkte
 
 **Ausweichen** – fünf Gegner, von klein nach groß:
