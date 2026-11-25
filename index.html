@@ -131,6 +131,7 @@ kbd{font:inherit;font-weight:700;background:var(--case);color:#f6e9f1;border-rad
       <ul class="legend">
         <li><canvas class="ico" data-k="food"></canvas><span><b>Nährstoff</b> +10 Punkte</span></li>
         <li><canvas class="ico" data-k="iron"></canvas><span><b>Eisen (Fe)</b> +50 Punkte</span></li>
+        <li><canvas class="ico" data-k="epo"></canvas><span><b>EPO</b> ultraselten (1 % pro Spiel) – 5 s keine Gegner, 30× Häm regnet!</span></li>
         <li><canvas class="ico" data-k="heme"></canvas><span><b>Häm-Jackpot</b> +200 – selten &amp; superschnell!</span></li>
         <li><canvas class="ico" data-k="shield"></canvas><span><b>Biofilm</b> 5 s Schutzschild</span></li>
       </ul>
@@ -217,6 +218,7 @@ const FACTS=[
  'Pyocyanin ist ein blaugrünes Pigment von P. aeruginosa. Es erzeugt reaktive Sauerstoffspezies und schädigt Wirts- und Konkurrenzzellen.',
  'Burkholderia cepacia ist gegen viele Antibiotika resistent und kann bei CF das gefährliche „Cepacia-Syndrom“ auslösen. Deshalb werden betroffene Patienten getrennt behandelt.',
  'Der Schimmelpilz Aspergillus fumigatus wird oft in CF-Atemwegen gefunden. Seine winzigen Sporen werden eingeatmet; manche Patienten entwickeln eine allergische Reaktion (ABPA).',
+ 'EPO (Erythropoetin) ist ein Hormon aus der Niere, das die Bildung roter Blutkörperchen anregt. Die stecken voller Hämoglobin – und damit Häm, das S. aureus als Eisenquelle anzapft.',
  'Gegen S. aureus werden bei CF z. B. Flucloxacillin eingesetzt – ein β-Laktam-Antibiotikum, das den Zellwandaufbau blockiert. MRSA ist dagegen resistent.'];
 let W=0,H=0,dpr=1;
 function resize(){const r=screen.getBoundingClientRect();dpr=Math.min(window.devicePixelRatio||1,2);W=r.width;H=r.height;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);if(ship)ship.y=Math.max(H*0.25,Math.min(H-40,ship.y));}
@@ -229,6 +231,7 @@ const blobs=Array.from({length:26},()=>({x:Math.random(),y:Math.random(),z:Math.
 const motes=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),z:Math.random()*0.8+0.2}));
 let ship=null,items=[],parts=[],pops=[],state='menu',score=0,lives=3,level=1,t=0,spawn=0,mspawn=1,shield=0,shake=0,hurt=0,banner=0;
 let lclock=0,boss=null,bossWarn=0,bossDone=0,bossBanner=0,bossReward='',mult=1,gold=0;
+let epoAt=-1,epo=0,epoLeft=0,epoSpawn=0;
 const keys={};let pointerX=null,pointerY=null;
 
 /* Level-Balance: alles hier anpassbar */
@@ -244,12 +247,16 @@ const shotSpeed=d=>Math.min(420,230+d*40);                 // Grund-Tempo der Bo
 const SHIP_SPEED=483;                                      // Höchsttempo der Kolonie (vorher 420, +15 %)
 const SHIP_ACCEL=2070;                                     // Beschleunigung (vorher 1800, +15 %)
 const IRON_CHANCE=0.13;                                    // Anteil Eisen (Fe) an Sammelobjekten
+const EPO_CHANCE=0.01;                                     // EPO-Event: Chance pro Spiel (1 %)
+const EPO_SECONDS=5;                                       // Dauer des Häm-Regens
+const EPO_HEMES=30;                                        // so viele Häm fallen in dieser Zeit
 const HEME_CHANCE=0.012;                                   // Häm-Jackpot: ~1 von 80 Objekten (etwa 1x pro Minute)
 const hemeSpeed=l=>1.3*1.25*Math.max(enemySpeed(l),itemSpeed(l)*1.5); // 1,3x schneller als das schnellste andere Objekt
 const ENEMY_SIZES=[12,16,22,30,40];                        // Antikörper, Komplement, Neutrophil, Makrophage, NET
 const sizeRatio=l=>Math.min(1.6,0.45+(l-1)*0.12);          // >1: große Gegner häufiger als kleine
 
-function reset(){ship={x:W/2,y:H-50,vx:0,vy:0};pointerX=null;items=[];parts=[];pops=[];lclock=0;boss=null;bossWarn=0;bossDone=0;bossBanner=0;bossReward='';gold=0;setMult(1);score=0;lives=3;level=1;t=0;spawn=0;mspawn=1;shield=0;shake=0;hurt=0;banner=0;hud();}
+function epoSafe(){if(boss||bossWarn>0)return false;const nb=Math.ceil((level+1)/BOSS_EVERY)*BOSS_EVERY;const untilBoss=(nb-1)*LEVEL_SECONDS-lclock;return untilBoss>8;} // kein EPO im/kurz vor dem Bosskampf
+function reset(){epoAt=Math.random()<EPO_CHANCE?rnd(20,120):-1;epo=0;epoLeft=0;epoSpawn=0;ship={x:W/2,y:H-50,vx:0,vy:0};pointerX=null;items=[];parts=[];pops=[];lclock=0;boss=null;bossWarn=0;bossDone=0;bossBanner=0;bossReward='';gold=0;setMult(1);score=0;lives=3;level=1;t=0;spawn=0;mspawn=1;shield=0;shake=0;hurt=0;banner=0;hud();}
 function hud(){$('score').textContent=score;$('level').textContent=level;const L=$('lives');L.textContent='';
   const add=(txt,cls)=>{const sp=document.createElement('span');sp.textContent=txt;if(cls)sp.className=cls;L.append(sp);};
   const lv=Math.min(3,Math.max(lives,0));add('♥'.repeat(lv)+'♡'.repeat(3-lv));
@@ -310,7 +317,7 @@ function nextBoss(){return BOSSES[(Math.max(1,Math.round(level/BOSS_EVERY))-1)%B
 function updateBoss(dt){const b=boss,B=BOSSES[b.type];Object.assign(b,bossSize());b.mouth=Math.max(0,b.mouth-dt);
   if(b.phase==='in'){b.ty=H*0.06+b.h/2;b.y+=(b.ty-b.y)*Math.min(1,dt*2.2);if(Math.abs(b.ty-b.y)<3)b.phase='fight';}
   else if(b.phase==='fight'){b.time-=dt;B.move(b,dt);
-    b.fire-=dt;if(b.fire<=0){B.attack(b);b.fire=B.rate(b.d)*rnd(0.85,1.15);}
+    if(epo<=0)b.fire-=dt;if(b.fire<=0){B.attack(b);b.fire=B.rate(b.d)*rnd(0.85,1.15);}
     if(b.time<=0){b.phase='out';setMult(1);bossBanner=3;
       if(lives<3){lives=3;bossReward='Leben wieder aufgefüllt ♥♥♥';}else{gold++;bossReward='Keins verloren – goldenes Herz! ♥';}
       burst(ship.x,ship.y,'#ffcf3f',30);hud();}}
@@ -332,8 +339,10 @@ function update(dt){
   }
   ship.x=Math.max(22,Math.min(W-22,ship.x+ship.vx*dt));
   ship.y=Math.max(H*0.25,Math.min(H-40,ship.y+ship.vy*dt));
+  if(epoAt>0&&t>=epoAt&&epoSafe()){epoAt=-1;place({k:'epo',r:13},itemSpeed(level));}
+  if(epo>0){epo-=dt;epoSpawn-=dt;while(epoSpawn<=0&&epoLeft>0){const it={k:'heme',r:12};place(it,1);it.vy=Math.max(260,hemeSpeed(level)*0.7)*rnd(0.85,1.15);epoLeft--;epoSpawn+=EPO_SECONDS/EPO_HEMES;}}
   spawn-=dt;if(spawn<=0){add();spawn=0.75*rnd(0.7,1.2);}
-  mspawn-=dt*(boss&&boss.phase==='fight'?0.35:1);if(mspawn<=0){addEnemy();mspawn=enemyInterval(level)*rnd(0.7,1.3);}
+  if(epo<=0)mspawn-=dt*(boss&&boss.phase==='fight'?0.35:1);if(mspawn<=0){addEnemy();mspawn=enemyInterval(level)*rnd(0.7,1.3);}
   banner=Math.max(0,banner-dt);shield=Math.max(0,shield-dt);shake=Math.max(0,shake-dt);hurt=Math.max(0,hurt-dt);
   for(const it of items){it.y+=it.vy*dt;it.x+=it.vx*dt;if(it.rot!==undefined)it.rot+=(it.vr||1.2)*dt;
     const hitR=(it.k==='enemy'?it.r*0.85+12:it.k==='shot'?it.r+9:it.r+18)+(shield>0?12:0);
@@ -341,6 +350,7 @@ function update(dt){
       it.dead=true;
       if(it.k==='food'){score+=10*mult;burst(it.x,it.y,'#5fe0c0',12);pop(it.x,it.y,'+'+10*mult,'#5fe0c0');}
       else if(it.k==='iron'){score+=50*mult;burst(it.x,it.y,'#ff8a3d',24);pop(it.x,it.y,'+'+50*mult,'#ffb27a');}
+      else if(it.k==='epo'){epo=EPO_SECONDS;epoLeft=EPO_HEMES;epoSpawn=0;burst(it.x,it.y,'#ff9de2',50);burst(it.x,it.y,'#ffe680',40);pop(it.x,it.y,'EPO!!','#ff9de2');blip(660);blip(880);}
       else if(it.k==='heme'){score+=200*mult;burst(it.x,it.y,'#ffe680',40);burst(it.x,it.y,'#ff9de2',20);pop(it.x,it.y,'+'+200*mult+'!','#ffe680');}
       else if(it.k==='shield'){shield=5;burst(it.x,it.y,'#8be36b',20);pop(it.x,it.y,'Schutz!','#8be36b');}
       else if(shield>0){const v=5*(it.s+1)*mult;score+=v;burst(it.x,it.y,'#8be36b',12+it.s*6);pop(it.x,it.y,'+'+v,'#8be36b');}
@@ -456,6 +466,11 @@ function drawItem(it){
   if(it.k==='food'){ctx.translate(it.x,it.y);ctx.rotate(it.rot);ctx.shadowColor='#5fe0c0';ctx.shadowBlur=12;ctx.fillStyle='#5fe0c0';ctx.beginPath();for(let i=0;i<6;i++){const a=i*1.0472;ctx.lineTo(Math.cos(a)*it.r,Math.sin(a)*it.r);}ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#d6fff4';ctx.beginPath();ctx.arc(0,0,it.r*.35,0,6.2832);ctx.fill();}
   else if(it.k==='iron'){const tx=it.x-it.vx*.3,ty=it.y-50,g=ctx.createLinearGradient(it.x,it.y,tx,ty);g.addColorStop(0,'#ff8a3dbb');g.addColorStop(1,'#ff8a3d00');ctx.strokeStyle=g;ctx.lineWidth=it.r*1.2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(it.x,it.y);ctx.lineTo(tx,ty);ctx.stroke();
     ctx.shadowColor='#ff8a3d';ctx.shadowBlur=18;ctx.fillStyle='#ff8a3d';ctx.beginPath();ctx.arc(it.x,it.y,it.r,0,6.2832);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#2a0c20';ctx.font='800 '+Math.round(it.r*1.05)+'px "Baloo 2",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Fe',it.x,it.y+1);}
+  else if(it.k==='epo'){const r=it.r;ctx.translate(it.x,it.y);
+    for(let i=0;i<3;i++){ctx.strokeStyle=['#ff9de2','#ffe680','#9de2ff'][i];ctx.lineWidth=2.5;ctx.globalAlpha=.85;ctx.beginPath();ctx.arc(0,0,r*(1.45+i*.28),t*3+i*2.1,t*3+i*2.1+3.6);ctx.stroke();}ctx.globalAlpha=1;
+    const g=ctx.createLinearGradient(0,-r*1.3,0,r);g.addColorStop(0,'#ffffff');g.addColorStop(1,'#ff9de2');ctx.shadowColor='#ff9de2';ctx.shadowBlur=26;ctx.fillStyle=g;
+    ctx.beginPath();ctx.moveTo(0,-r*1.45);ctx.bezierCurveTo(r*.9,-r*.35,r*1.05,r*.2,r*1.05,r*.35);ctx.arc(0,r*.35,r*1.05,0,Math.PI);ctx.bezierCurveTo(-r*1.05,r*.2,-r*.9,-r*.35,0,-r*1.45);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle='#7a1050';ctx.font='800 '+Math.round(r*.72)+'px "Baloo 2",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('EPO',0,r*.3);}
   else if(it.k==='heme'){const r=it.r,len=Math.min(140,it.vy*.28),g=ctx.createLinearGradient(it.x,it.y,it.x,it.y-len);g.addColorStop(0,'#ffffffdd');g.addColorStop(.3,'#ffe680aa');g.addColorStop(.65,'#ff9de266');g.addColorStop(1,'#9de2ff00');
     ctx.strokeStyle=g;ctx.lineWidth=r*1.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(it.x,it.y);ctx.lineTo(it.x,it.y-len);ctx.stroke();
     ctx.translate(it.x,it.y);ctx.rotate(t*4);ctx.shadowColor='#ffe680';ctx.shadowBlur=24;ctx.fillStyle='#fff6c8';ctx.beginPath();
@@ -495,6 +510,11 @@ function draw(){
     ctx.fillStyle=f>0.5?'#ffffff':'#ff3355';ctx.font='800 '+Math.round(m*0.12)+'px "Baloo 2",sans-serif';ctx.fillText('⚠ ACHTUNG ⚠',W/2,H*0.4);
     ctx.fillStyle='#ffd0d8';ctx.font='700 '+Math.round(m*0.05)+'px "Baloo 2",sans-serif';ctx.fillText(nextBoss().warn,W/2,H*0.4+m*0.1);
     ctx.fillText('Bosskampf – ×2 Punkte',W/2,H*0.4+m*0.16);ctx.shadowBlur=0;}
+  if(epo>0&&state==='play'){const m=Math.min(W,H),f=(Math.sin(t*10)+1)/2,v=ctx.createRadialGradient(W/2,H/2,m*.3,W/2,H/2,Math.max(W,H)*.75);
+    v.addColorStop(0,'rgba(255,230,128,0)');v.addColorStop(1,'rgba(255,190,90,'+(0.18+0.18*f).toFixed(2)+')');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ffe680';ctx.fillRect(0,5,W*Math.max(0,epo/EPO_SECONDS),5);
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000a';ctx.shadowBlur=12;ctx.fillStyle='#ffe680';ctx.font='800 '+Math.round(m*0.075)+'px "Baloo 2",sans-serif';
+    ctx.fillText('EPO! Häm-Regen '+epo.toFixed(1)+' s',W/2,H*0.32);ctx.shadowBlur=0;}
   if(bossBanner>0&&state==='play'){const m=Math.min(W,H);ctx.globalAlpha=Math.min(1,bossBanner);ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000a';ctx.shadowBlur=12;
     ctx.fillStyle='#8be36b';ctx.font='800 '+Math.round(m*0.1)+'px "Baloo 2",sans-serif';ctx.fillText('Boss überstanden!',W/2,H*0.42);ctx.fillStyle='#ffcf3f';ctx.font='700 '+Math.round(m*0.05)+'px "Baloo 2",sans-serif';ctx.fillText(bossReward,W/2,H*0.42+m*0.09);ctx.globalAlpha=1;ctx.shadowBlur=0;}
   if(banner>0&&state==='play'){const m=Math.min(W,H);ctx.globalAlpha=Math.min(1,banner);ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000a';ctx.shadowBlur=12;
@@ -506,7 +526,7 @@ function draw(){
 function icons(){const main=ctx,tt=t;t=0.6;
   for(const c of document.querySelectorAll('.ico')){const d=Math.min(window.devicePixelRatio||1,2),S=48;c.width=S*d;c.height=S*d;ctx=c.getContext('2d');ctx.setTransform(d,0,0,d,0,0);
     const k=c.dataset.k,s=+c.dataset.s||0,it={k,s,x:S/2,y:S/2+(k==='enemy'?2:2),seed:3+s,rot:k==='enemy'?0:0.3,vx:0};
-    if(k==='enemy')it.r=[9,10,11,12,13][s];else if(k==='heme'){it.r=11;it.vy=0;}else if(k==='shield')it.r=10;else it.r=9;
+    if(k==='enemy')it.r=[9,10,11,12,13][s];else if(k==='heme'){it.r=11;it.vy=0;}else if(k==='epo'){it.r=9;it.y+=3;}else if(k==='shield')it.r=10;else it.r=9;
     if(k==='iron'){it.x-=2;}
     if(k==='boss'){c.width=96*d;ctx.setTransform(d,0,0,d,0,0);drawBoss(s===2?{type:2,x:48,y:30,w:80,h:24,mouth:0.1,seed:2,spin:0}:{type:s,x:s===0?44:48,y:26,w:s===0?72:84,h:s===0?26:28,mouth:0.1,seed:2,spin:0});continue;}
     drawItem(it);}

@@ -24,6 +24,8 @@ Mit GitHub Pages (Settings → Pages → Branch `main`) ist das Spiel auch onlin
 - **Nährstoff** (türkis): +10 Punkte
 - **Eisen (Fe)** (orange): +50 Punkte
 - **Häm-Jackpot** (goldener Stern „200“): +200 Punkte – sehr selten und 1,3× schneller als alles andere
+- **EPO** (rosa Tropfen): ultraselten – nur in 1 % aller Spiele. Löst 5 Sekunden **Häm-Regen** aus:
+  keine neuen Gegner, und 30 Häm fallen vom Himmel. Während eines Bosskampfs kommt kein EPO.
 - **Biofilm** (grün): 5 Sekunden Schutz – gerammte Immunzellen geben Bonuspunkte
 
 **Ausweichen** – fünf Gegner, von klein nach groß:
@@ -84,5 +86,6 @@ Alle Werte stehen gesammelt im Script von `index.html` unter dem Kommentar `Leve
 - `IRON_CHANCE` – wie oft Eisen kommt
 - `BOSS_EVERY` / `BOSS_SECONDS` / `WARN_SECONDS` – wann und wie lange der Boss kommt
 - `BOSSES` – die vier Bosse mit Bewegung, Angriff und Feuerrate; `shotSpeed` – Tempo der Geschosse
+- `EPO_CHANCE` / `EPO_SECONDS` / `EPO_HEMES` – das EPO-Event
 - `HEME_CHANCE` / `hemeSpeed` – Häufigkeit und Tempo des Häm-Jackpots
 - `ENEMY_SIZES` / `sizeRatio` – Gegnergrößen und wie schnell große häufiger werden
