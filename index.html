@@ -234,6 +234,8 @@ const BOSS_SECONDS=30;                                     // Dauer des Bosskamp
 const WARN_SECONDS=3;                                      // Warnung vor dem Boss
 const bossFireRate=l=>Math.max(0.16,0.38-(l/BOSS_EVERY-1)*0.05); // Sekunden zwischen Spuck-Salven
 const shotSpeed=l=>Math.min(420,230+(l/BOSS_EVERY-1)*40);  // Tempo der Moleküle
+const SHIP_SPEED=483;                                      // Höchsttempo der Kolonie (vorher 420, +15 %)
+const SHIP_ACCEL=2070;                                     // Beschleunigung (vorher 1800, +15 %)
 const IRON_CHANCE=0.13;                                    // Anteil Eisen (Fe) an Sammelobjekten
 const HEME_CHANCE=0.012;                                   // Häm-Jackpot: ~1 von 80 Objekten (etwa 1x pro Minute)
 const hemeSpeed=l=>1.5*1.25*Math.max(enemySpeed(l),itemSpeed(l)*1.5); // 1,5x schneller als das schnellste andere Objekt
@@ -290,7 +292,7 @@ function update(dt){
   if(bossWarn>0){bossWarn-=dt;if(bossWarn<=0)spawnBoss();}
   if(boss)updateBoss(dt);
   bossBanner=Math.max(0,bossBanner-dt);
-  const acc=1800,max=420,cl=(v,m)=>Math.max(-m,Math.min(m,v));
+  const acc=SHIP_ACCEL,max=SHIP_SPEED,cl=(v,m)=>Math.max(-m,Math.min(m,v));
   const dx=(keys.arrowleft||keys.a?-1:0)+(keys.arrowright||keys.d?1:0);
   const dy=(keys.arrowup||keys.w?-1:0)+(keys.arrowdown||keys.s?1:0);
   if(pointerX!==null){ship.vx=cl((pointerX-ship.x)*10,max*1.4);ship.vy=cl((pointerY-ship.y)*10,max*1.4);}

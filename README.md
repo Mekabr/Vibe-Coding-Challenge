@@ -66,6 +66,7 @@ Alle Werte stehen gesammelt im Script von `index.html` unter dem Kommentar `Leve
 - `LEVEL_SECONDS` – Dauer eines Levels
 - `enemyInterval` – Abstand zwischen Immun-Gegnern
 - `enemySpeed` / `itemSpeed` – Geschwindigkeiten
+- `SHIP_SPEED` / `SHIP_ACCEL` – Tempo und Beschleunigung der eigenen Kolonie
 - `IRON_CHANCE` – wie oft Eisen kommt
 - `BOSS_EVERY` / `BOSS_SECONDS` / `WARN_SECONDS` – wann und wie lange der Boss kommt
 - `bossFireRate` / `shotSpeed` – wie schnell der Boss spuckt
