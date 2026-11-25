@@ -81,6 +81,17 @@ h3{font-size:20px;margin:26px 0 8px}
 .grp{border-radius:18px;padding:4px 16px 14px;background:var(--card);border-top:5px solid}
 .grp.good{border-color:var(--bio)}.grp.bad{border-color:#ff3355}
 .grp h3{margin:12px 0 10px}.grp.good h3{color:light-dark(#3d8a2a,var(--bio))}.grp.bad h3{color:#ff4d6d}
+.skinbar{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.skinlbl{font-weight:700;color:var(--soft);font-size:15px}
+.skins{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.skin{font:inherit;display:flex;flex-direction:column;align-items:center;gap:0;min-width:84px;padding:6px 8px 4px;border-radius:14px;border:2px solid transparent;background:var(--card);color:var(--ink);cursor:pointer;box-shadow:0 4px 12px -8px #0006}
+.skin canvas{width:44px;height:44px;border-radius:10px;background:#2a0d24}
+.skin b{font-size:13px;line-height:1.2;font-style:italic}
+.skin small{font-size:11.5px;color:var(--soft);line-height:1.2;max-width:12ch;text-align:center}
+.skin[aria-pressed=true]{border-color:var(--gold)}
+.skin:disabled{cursor:not-allowed;opacity:.6}
+.skin:disabled canvas{filter:grayscale(1) brightness(.5)}
+.skin:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 .grp h3 small{font-size:14px;font-weight:500;color:var(--soft);margin-left:6px}
 .grp .legend{grid-template-columns:1fr}
 .keys{text-align:center;color:var(--soft);font-size:15px;margin-top:12px}
@@ -113,7 +124,7 @@ kbd{font:inherit;font-weight:700;background:var(--case);color:#f6e9f1;border-rad
       <canvas id="c"></canvas>
       <div class="overlay" id="ov">
         <h2 id="ovTitle">Aureus</h2>
-        <p id="ovText">You are a colony of Staphylococcus aureus in the thick mucus of a cystic fibrosis lung. Anything that sparkles, collect it. Anything that glows red and stares at you is the immune system – dodge it!</p>
+        <p id="ovText">You are a colony of bacteria – starting as Staphylococcus aureus – in the thick mucus of a cystic fibrosis lung. Anything that sparkles, collect it. Anything that glows red and stares at you is the immune system – dodge it!</p>
         <p id="ovStats" class="stats" hidden></p>
         <form id="nameForm" class="nameform" hidden>
           <label for="nameIn" class="sr">Your name</label>
@@ -127,6 +138,7 @@ kbd{font:inherit;font-weight:700;background:var(--case);color:#f6e9f1;border-rad
       </div>
     </div>
   </div>
+  <div class="skinbar"><span class="skinlbl">Choose your pathogen</span><div class="skins" id="skins"></div></div>
   <p class="keys">Arrow keys or <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> to move · <kbd>Space</kbd> dash (⚡, phone: double-tap) · <kbd>P</kbd> pause · on a phone just drag</p>
 
   <div class="groups">
@@ -238,7 +250,7 @@ const motes=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),z:Math.
 let ship=null,items=[],parts=[],pops=[],state='menu',score=0,lives=3,level=1,t=0,spawn=0,mspawn=1,shield=0,shake=0,hurt=0,banner=0;
 let lclock=0,boss=null,bossWarn=0,bossDone=0,bossBanner=0,bossReward='',mult=1,gold=0;
 let epoAt=-1,epo=0,epoLeft=0,epoSpawn=0;
-let lastLB=0,scv=0,streak=0,dashT=0,dashCD=0,trail=[],noHit=0,st={};
+let unlockMsg='',lastLB=0,scv=0,streak=0,dashT=0,dashCD=0,trail=[],noHit=0,st={};
 const keys={};let pointerX=null,pointerY=null;
 
 /* Game balance: everything here can be tweaked */
@@ -336,7 +348,8 @@ function updateBoss(dt){const b=boss,B=BOSSES[b.type];Object.assign(b,bossSize()
   if(b.phase==='in'){b.ty=H*0.06+b.h/2;b.y+=(b.ty-b.y)*Math.min(1,dt*2.2);if(Math.abs(b.ty-b.y)<3)b.phase='fight';}
   else if(b.phase==='fight'){b.time-=dt;B.move(b,dt);
     if(epo<=0)b.fire-=dt;if(b.fire<=0){B.attack(b);b.fire=B.rate(b.d)*rnd(0.85,1.15);}
-    if(b.time<=0){b.phase='out';setMult(1);bossBanner=3;st.bosses++;
+    if(b.time<=0){b.phase='out';setMult(1);bossBanner=3.5;st.bosses++;unlockMsg='';
+      {const nk=SKINS[b.type+1];if(nk&&!unlocked.has(nk.id)){unlocked.add(nk.id);saveSkins();renderSkins();unlockMsg='New pathogen unlocked: '+nk.name+'!';}}
       if(lives<3){lives=3;bossReward='Lives refilled ♥♥♥';}else{gold++;bossReward='No hearts lost – golden heart! ♥';}
       burst(ship.x,ship.y,'#ffcf3f',30);hud();}}
   else{b.y-=dt*H*0.5;if(b.y<-b.h)boss=null;}}
@@ -395,15 +408,37 @@ function update(dt){
 /* ---------- Zeichnen ---------- */
 function coccus(x,y,r){const g=ctx.createRadialGradient(x-r*.35,y-r*.35,r*.1,x,y,r);g.addColorStop(0,'#fff3b0');g.addColorStop(.55,'#ffcf3f');g.addColorStop(1,'#c98a0c');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fill();ctx.strokeStyle='#8a5a0a88';ctx.lineWidth=1;ctx.stroke();}
 const CLUSTER=[[-12,2],[0,4],[12,2],[-6,-8],[6,-8],[0,-19],[-6,14],[6,14]];
+function ball(x,y,rx,ry,rot,c0,c1,c2,edge){ctx.save();ctx.translate(x,y);ctx.rotate(rot);const g=ctx.createRadialGradient(-rx*.35,-ry*.35,1,0,0,Math.max(rx,ry));g.addColorStop(0,c0);g.addColorStop(.55,c1);g.addColorStop(1,c2);ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,0,6.2832);ctx.fill();ctx.strokeStyle=edge;ctx.lineWidth=1;ctx.stroke();ctx.restore();}
+const HINF=[[-12,-4,.4],[-2,-12,1.2],[9,-7,.2],[13,5,1.4],[2,2,.8],[-9,9,2.1],[4,14,.1],[-15,-15,1.7],[14,-17,2.4]];
+const SPN=[[-14,12,-.8],[-2,0,-.8],[10,-12,-.8]];
+const SKINS=[
+ {id:'aureus',name:'S. aureus',hint:'',glow:'#ffcf3f',
+  draw:()=>CLUSTER.forEach(([cx,cy],i)=>coccus(cx+Math.sin(t*3+i)*0.8,cy+Math.cos(t*2.6+i)*0.8,7.5))},
+ {id:'hinf',name:'H. influenzae',hint:'beat P. aeruginosa',glow:'#ff9ec0',
+  draw:()=>HINF.forEach(([x,y,r],i)=>ball(x+Math.sin(t*3+i)*0.8,y+Math.cos(t*2.4+i)*0.8,7,4.4,r+Math.sin(t+i)*.1,'#ffe3ee','#ff8fb8','#c4507a','#8a2f55aa'))},
+ {id:'spn',name:'S. pneumoniae',hint:'beat B. cepacia',glow:'#a58cff',
+  draw:()=>SPN.forEach(([x,y,r],i)=>{const ox=Math.cos(r)*6.5,oy=Math.sin(r)*6.5,w=Math.sin(t*2.5+i)*0.8;
+    ctx.save();ctx.fillStyle='#d9ccff33';ctx.strokeStyle='#d9ccff66';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(x,y+w,15,9.5,r,0,6.2832);ctx.fill();ctx.stroke();ctx.restore();
+    ball(x-ox,y-oy+w,7.2,5.4,r,'#efe8ff','#8a6cff','#4b2fb0','#2a1870aa');ball(x+ox,y+oy+w,7.2,5.4,r,'#efe8ff','#8a6cff','#4b2fb0','#2a1870aa');})},
+ {id:'mabs',name:'M. abscessus',hint:'beat A. fumigatus',glow:'#ff6ac1',
+  draw:()=>{ctx.lineCap='round';for(let k=0;k<4;k++){const off=(k-1.5)*6;ctx.strokeStyle='#7a1450';ctx.lineWidth=8;ctx.beginPath();for(let i=0;i<=12;i++){const yy=-22+i*3.8,xx=off+Math.sin(i*.7+t*2+k)*4;i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);}ctx.stroke();
+    ctx.strokeStyle='#ff6ac1';ctx.lineWidth=5.5;ctx.stroke();ctx.strokeStyle='#ffd6ee';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.strokeStyle='#7a145099';ctx.lineWidth=1;for(let i=1;i<12;i+=2){const yy=-22+i*3.8,xx=off+Math.sin(i*.7+t*2+k)*4;ctx.beginPath();ctx.moveTo(xx-3,yy);ctx.lineTo(xx+3,yy);ctx.stroke();}}}},
+ {id:'mrsa',name:'MRSA',hint:'beat the antibiotics',glow:'#ff8a3d',
+  draw:()=>{CLUSTER.forEach(([cx,cy],i)=>ball(cx+Math.sin(t*3+i)*0.8,cy+Math.cos(t*2.6+i)*0.8,7.5,7.5,0,'#fff0c8','#f29a2e','#a8400c','#5a2006aa'));
+    ctx.save();ctx.globalAlpha=.55+.25*Math.sin(t*3);ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<6;i++){const a=i*1.0472+Math.PI/6;ctx.lineTo(Math.cos(a)*24,-2+Math.sin(a)*24);}ctx.closePath();ctx.stroke();ctx.restore();}}];
+let skin=0,unlocked=new Set(['aureus']);
+try{(JSON.parse(localStorage.getItem('aureus-skins')||'[]')).forEach(id=>unlocked.add(id));const sv=localStorage.getItem('aureus-skin');const si=SKINS.findIndex(k=>k.id===sv);if(si>=0&&unlocked.has(sv))skin=si;}catch(e){}
+function saveSkins(){try{localStorage.setItem('aureus-skins',JSON.stringify([...unlocked]));localStorage.setItem('aureus-skin',SKINS[skin].id);}catch(e){}}
 function drawShip(){
   const {x,y}=ship,sc=scv>0?(scv<1?0.55+0.45*(1-scv):0.55):1;
-  for(const q of trail){ctx.save();ctx.globalAlpha=q.l*1.6;ctx.translate(q.x,q.y);ctx.scale(sc,sc);ctx.fillStyle='#ffcf3f';CLUSTER.forEach(([cx,cy])=>{ctx.beginPath();ctx.arc(cx,cy,7,0,6.2832);ctx.fill();});ctx.restore();}
+  for(const q of trail){ctx.save();ctx.globalAlpha=q.l*1.6;ctx.translate(q.x,q.y);ctx.scale(sc,sc);ctx.fillStyle=SKINS[skin].glow;ctx.beginPath();ctx.arc(0,-2,20,0,6.2832);ctx.fill();ctx.restore();}
   if(dashCD>0&&state==='play'){ctx.save();ctx.strokeStyle='#ffffff55';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y-2,28*sc+4,-Math.PI/2,-Math.PI/2+6.2832*(1-dashCD/DASH_COOLDOWN));ctx.stroke();ctx.restore();}
   ctx.save();ctx.translate(x,y);ctx.rotate(ship.vx/1200);ctx.scale(sc,sc);
   if(scv>0)ctx.filter='saturate(0.45) brightness(1.15)';
   if(hurt>0&&Math.floor(hurt*12)%2)ctx.globalAlpha=.35;
-  ctx.shadowColor='#ffcf3f';ctx.shadowBlur=14;
-  CLUSTER.forEach(([cx,cy],i)=>coccus(cx+Math.sin(t*3+i)*0.8,cy+Math.cos(t*2.6+i)*0.8,7.5));
+  ctx.shadowColor=SKINS[skin].glow;ctx.shadowBlur=14;
+  SKINS[skin].draw();
   ctx.restore();
   if(shield>0){ctx.save();ctx.globalAlpha=shield<1.5?(Math.sin(t*20)+1)/2*.5+.2:.55;ctx.fillStyle='#8be36b33';ctx.strokeStyle='#8be36b';ctx.lineWidth=3;ctx.shadowColor='#8be36b';ctx.shadowBlur=14;
     ctx.beginPath();for(let i=0;i<=24;i++){const a=i/24*6.2832,rr=(34+Math.sin(a*5+t*4)*3)*sc;ctx.lineTo(x+Math.cos(a)*rr,y-2+Math.sin(a)*rr);}ctx.fill();ctx.stroke();ctx.restore();}
@@ -550,7 +585,7 @@ function draw(){
     ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000a';ctx.shadowBlur=12;ctx.fillStyle='#ffe680';ctx.font='800 '+Math.round(m*0.075)+'px "Baloo 2",sans-serif';
     ctx.fillText('EPO! Heme rain '+epo.toFixed(1)+' s',W/2,H*0.32);ctx.shadowBlur=0;}
   if(bossBanner>0&&state==='play'){const m=Math.min(W,H);ctx.globalAlpha=Math.min(1,bossBanner);ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000a';ctx.shadowBlur=12;
-    ctx.fillStyle='#8be36b';ctx.font='800 '+Math.round(m*0.1)+'px "Baloo 2",sans-serif';ctx.fillText('Boss survived!',W/2,H*0.42);ctx.fillStyle='#ffcf3f';ctx.font='700 '+Math.round(m*0.05)+'px "Baloo 2",sans-serif';ctx.fillText(bossReward,W/2,H*0.42+m*0.09);ctx.globalAlpha=1;ctx.shadowBlur=0;}
+    ctx.fillStyle='#8be36b';ctx.font='800 '+Math.round(m*0.1)+'px "Baloo 2",sans-serif';ctx.fillText('Boss survived!',W/2,H*0.42);ctx.fillStyle='#ffcf3f';ctx.font='700 '+Math.round(m*0.05)+'px "Baloo 2",sans-serif';ctx.fillText(bossReward,W/2,H*0.42+m*0.09);if(unlockMsg){ctx.fillStyle='#ffffff';ctx.fillText(unlockMsg,W/2,H*0.42+m*0.16);}ctx.globalAlpha=1;ctx.shadowBlur=0;}
   if(banner>0&&state==='play'){const m=Math.min(W,H);ctx.globalAlpha=Math.min(1,banner);ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000a';ctx.shadowBlur=12;
     ctx.fillStyle='#ffcf3f';ctx.font='800 '+Math.round(m*0.11)+'px "Baloo 2",sans-serif';ctx.fillText('Level '+level,W/2,H*0.42);
     ctx.fillStyle='#c9b6ff';ctx.font='700 '+Math.round(m*0.045)+'px "Baloo 2",sans-serif';ctx.fillText('The immune system is gearing up!',W/2,H*0.42+m*0.09);ctx.fillStyle='#ffcf3f';ctx.fillText('Level bonus +'+lastLB,W/2,H*0.42+m*0.15);ctx.globalAlpha=1;ctx.shadowBlur=0;}
@@ -577,6 +612,12 @@ requestAnimationFrame(loop);
 
 startBtn.addEventListener('click',()=>{audio();start();});
 $('dashBtn').addEventListener('click',e=>{e.currentTarget.blur();dash();});
+function renderSkins(){const box=$('skins');box.textContent='';
+  SKINS.forEach((k,i)=>{const open=unlocked.has(k.id),b=document.createElement('button');b.className='skin';b.type='button';b.disabled=!open;b.setAttribute('aria-pressed',String(i===skin));
+    const c=document.createElement('canvas'),nm=document.createElement('b'),sm=document.createElement('small');nm.textContent=k.name;sm.textContent=open?(i===skin?'selected':'play as'):'🔒 '+k.hint;
+    b.append(c,nm,sm);b.addEventListener('click',()=>{skin=i;saveSkins();renderSkins();b.blur();});box.append(b);
+    const d=Math.min(window.devicePixelRatio||1,2);c.width=44*d;c.height=44*d;const main=ctx,tt=t;ctx=c.getContext('2d');t=0.4;ctx.setTransform(d*0.8,0,0,d*0.8,22*d,24*d);ctx.shadowColor=k.glow;ctx.shadowBlur=8;try{k.draw();}catch(e){}ctx=main;t=tt;});}
+renderSkins();
 const soundBtn=$('soundBtn');const paintSound=()=>{soundBtn.textContent=muted?'🔇':'🔊';soundBtn.setAttribute('aria-pressed',String(!muted));};paintSound();
 soundBtn.addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('aureus-muted',muted?'1':'0')}catch(e){}paintSound();});
 $('pauseBtn').addEventListener('click',()=>{if(state==='play'||state==='pause')pause();});

@@ -59,6 +59,18 @@ and the level clock stands still. Four bosses take turns; from level 25 on they 
 you get a **golden heart** instead. Golden hearts are used up first when you get hit,
 don't come back, and stack.
 
+**Pathogens (skins):** you start as *S. aureus*. Beating each boss type for the first time
+unlocks a new pathogen to play as (choose it below the playfield). Skins are cosmetic only –
+same size and speed – and unlocks are saved in your browser.
+
+| Unlocked by beating | Pathogen |
+|---|---|
+| – | *Staphylococcus aureus* (golden grape-like cluster) |
+| *P. aeruginosa* | *Haemophilus influenzae* (small Gram-negative coccobacilli) |
+| *B. cepacia* | *Streptococcus pneumoniae* (lancet-shaped diplococci with a capsule) |
+| *A. fumigatus* | *Mycobacterium abscessus* (cords of rods) |
+| Antibiotics | MRSA (methicillin-resistant *S. aureus*) |
+
 **Game over:** you see your stats – level, bosses beaten, time survived, nutrients, iron and heme
 collected, total level bonus, longest time without a hit, best streak and number of dashes.
 
