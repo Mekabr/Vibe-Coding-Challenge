@@ -31,9 +31,15 @@ Antikörper → Komplement → Neutrophil → Makrophage → NET (Neutrophilen-N
 Jeder Treffer kostet ein Leben, du hast drei.
 
 **Bosskampf** – alle 10 Level: Nach einer Warnung (Blinken + Sirene, Ton über 🔊 abschaltbar)
-schiebt sich ein riesiges *P. aeruginosa* von oben ins Bild und spuckt 30 Sekunden lang
-Moleküle auf dich: **Pyocyanin**, **LasA** und **HQNO**. Ausweichen! Während des Bosskampfs
-gibt es **doppelte Punkte**, und die Level-Uhr steht still.
+schiebt sich ein Boss von oben ins Bild. 30 Sekunden überleben – dabei gibt es **doppelte Punkte**,
+und die Level-Uhr steht still. Vier Bosse wechseln sich ab, ab Level 50 werden sie stärker:
+
+| Level | Boss | Angriff |
+|---|---|---|
+| 10, 50, 90 … | *Pseudomonas aeruginosa* | spuckt gezielt Pyocyanin, LasA und HQNO |
+| 20, 60 … | *Burkholderia cepacia* | springt umher, feuert Fächer-Salven |
+| 30, 70 … | *Aspergillus fumigatus* (Schimmelpilz) | lässt Sporen regnen |
+| 40, 80 … | Antibiotika-Therapie | rotierende β-Laktam-Spirale |
 
 Alle 20 Sekunden steigt das Level: Es kommen mehr Immun-Gegner, sie werden schneller,
 und der Anteil der großen wächst. Dein Rekord wird im Browser gespeichert.
@@ -56,6 +62,10 @@ Einträge lassen sich im Supabase-Dashboard unter *Table Editor → scores* anse
 - Der Körper hält Eisen knapp („nutritional immunity“), deshalb ist es für Bakterien wertvoll.
 - *P. aeruginosa* verdrängt *S. aureus* in CF-Lungen oft mit der Zeit – u. a. mit der Protease LasA
   („Staphylolysin“), dem Atmungshemmer HQNO und dem Giftpigment Pyocyanin.
+- *Burkholderia cepacia* ist sehr resistent und kann das gefährliche „Cepacia-Syndrom“ auslösen.
+- *Aspergillus fumigatus* ist ein Schimmelpilz, dessen Sporen eingeatmet werden; manche CF-Patienten
+  entwickeln eine allergische Reaktion (ABPA).
+- β-Laktam-Antibiotika wie Flucloxacillin blockieren den Zellwandaufbau von *S. aureus*; MRSA ist resistent.
 
 Das Spiel ist stark vereinfacht und nicht maßstabsgetreu.
 
@@ -69,6 +79,6 @@ Alle Werte stehen gesammelt im Script von `index.html` unter dem Kommentar `Leve
 - `SHIP_SPEED` / `SHIP_ACCEL` – Tempo und Beschleunigung der eigenen Kolonie
 - `IRON_CHANCE` – wie oft Eisen kommt
 - `BOSS_EVERY` / `BOSS_SECONDS` / `WARN_SECONDS` – wann und wie lange der Boss kommt
-- `bossFireRate` / `shotSpeed` – wie schnell der Boss spuckt
+- `BOSSES` – die vier Bosse mit Bewegung, Angriff und Feuerrate; `shotSpeed` – Tempo der Geschosse
 - `HEME_CHANCE` / `hemeSpeed` – Häufigkeit und Tempo des Häm-Jackpots
 - `ENEMY_SIZES` / `sizeRatio` – Gegnergrößen und wie schnell große häufiger werden
