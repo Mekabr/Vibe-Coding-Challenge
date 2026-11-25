@@ -23,13 +23,14 @@ Mit GitHub Pages (Settings → Pages → Branch `main`) ist das Spiel auch onlin
 **Sammeln**
 - **Nährstoff** (türkis): +10 Punkte
 - **Eisen (Fe)** (orange): +50 Punkte
+- **Häm-Jackpot** (goldener Stern „200“): +200 Punkte – sehr selten und 1,5× schneller als alles andere
 - **Biofilm** (grün): 5 Sekunden Schutz – gerammte Immunzellen geben Bonuspunkte
 
 **Ausweichen** – fünf Gegner, von klein nach groß:
 Antikörper → Komplement → Neutrophil → Makrophage → NET (Neutrophilen-Netz).
 Jeder Treffer kostet ein Leben, du hast drei.
 
-Alle 40 Sekunden steigt das Level: Es kommen mehr Immun-Gegner, sie werden schneller,
+Alle 20 Sekunden steigt das Level: Es kommen mehr Immun-Gegner, sie werden schneller,
 und der Anteil der großen wächst. Dein Rekord wird im Browser gespeichert.
 
 ## Leaderboard
@@ -58,4 +59,5 @@ Alle Werte stehen gesammelt im Script von `index.html` unter dem Kommentar `Leve
 - `LEVEL_SECONDS` – Dauer eines Levels
 - `enemyInterval` – Abstand zwischen Immun-Gegnern
 - `enemySpeed` / `itemSpeed` – Geschwindigkeiten
+- `HEME_CHANCE` / `hemeSpeed` – Häufigkeit und Tempo des Häm-Jackpots
 - `ENEMY_SIZES` / `sizeRatio` – Gegnergrößen und wie schnell große häufiger werden

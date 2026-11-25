@@ -119,6 +119,7 @@ kbd{font:inherit;font-weight:700;background:var(--case);color:#f6e9f1;border-rad
       <ul class="legend">
         <li><canvas class="ico" data-k="food"></canvas><span><b>Nährstoff</b> +10 Punkte</span></li>
         <li><canvas class="ico" data-k="iron"></canvas><span><b>Eisen (Fe)</b> +50 Punkte</span></li>
+        <li><canvas class="ico" data-k="heme"></canvas><span><b>Häm-Jackpot</b> +200 – selten &amp; superschnell!</span></li>
         <li><canvas class="ico" data-k="shield"></canvas><span><b>Biofilm</b> 5 s Schutzschild</span></li>
       </ul>
     </section>
@@ -202,10 +203,12 @@ let ship=null,items=[],parts=[],pops=[],state='menu',score=0,lives=3,level=1,t=0
 const keys={};let pointerX=null,pointerY=null;
 
 /* Level-Balance: alles hier anpassbar */
-const LEVEL_SECONDS=40;                                    // Dauer eines Levels
+const LEVEL_SECONDS=20;                                    // Dauer eines Levels
 const enemyInterval=l=>Math.max(0.22,1.5/(1+(l-1)*0.4));   // Sekunden zwischen Immun-Gegnern
 const enemySpeed=l=>Math.min(480,120+(l-1)*30);            // Geschwindigkeit Gegner
 const itemSpeed=l=>Math.min(300,110+(l-1)*15);             // Geschwindigkeit Nährstoffe & Co.
+const HEME_CHANCE=0.012;                                   // Häm-Jackpot: ~1 von 80 Objekten (etwa 1x pro Minute)
+const hemeSpeed=l=>1.5*1.25*Math.max(enemySpeed(l),itemSpeed(l)*1.5); // 1,5x schneller als das schnellste andere Objekt
 const ENEMY_SIZES=[12,16,22,30,40];                        // Antikörper, Komplement, Neutrophil, Makrophage, NET
 const sizeRatio=l=>Math.min(1.6,0.45+(l-1)*0.12);          // >1: große Gegner häufiger als kleine
 
@@ -225,6 +228,7 @@ function pickSize(l){const q=sizeRatio(l),w=ENEMY_SIZES.map((_,i)=>q**i),sum=w.r
 function addEnemy(){const s=pickSize(level);place({k:'enemy',s,r:ENEMY_SIZES[s]*rnd(0.92,1.08),rot:rnd(0,6),vr:rnd(-1.6,1.6)/(1+s*0.5)},enemySpeed(level)*(1-s*0.07));}
 function add(){
   const r=Math.random(),sp=itemSpeed(level);
+  if(Math.random()<HEME_CHANCE){const it={k:'heme',r:12};place(it,1);it.vy=hemeSpeed(level);return;}
   if(r<0.05&&shield<=0)place({k:'shield',r:14},sp);
   else if(r<0.27){const it={k:'iron',r:11};place(it,sp*1.5);it.vx=rnd(-50,50);}
   else place({k:'food',r:10,rot:rnd(0,6)},sp);
@@ -253,6 +257,7 @@ function update(dt){
       it.dead=true;
       if(it.k==='food'){score+=10;burst(it.x,it.y,'#5fe0c0',12);pop(it.x,it.y,'+10','#5fe0c0');}
       else if(it.k==='iron'){score+=50;burst(it.x,it.y,'#ff8a3d',24);pop(it.x,it.y,'+50','#ffb27a');}
+      else if(it.k==='heme'){score+=200;burst(it.x,it.y,'#ffe680',40);burst(it.x,it.y,'#ff9de2',20);pop(it.x,it.y,'+200!','#ffe680');}
       else if(it.k==='shield'){shield=5;burst(it.x,it.y,'#8be36b',20);pop(it.x,it.y,'Schutz!','#8be36b');}
       else if(shield>0){score+=5*(it.s+1);burst(it.x,it.y,'#8be36b',12+it.s*6);pop(it.x,it.y,'+'+5*(it.s+1),'#8be36b');}
       else if(hurt<=0){lives--;hurt=1.2;shake=.3+it.s*.08;burst(it.x,it.y,'#ff6b6b',20+it.s*8);pop(it.x,it.y,'−1 ♥','#ff6b6b');if(lives<=0){hud();over();}}
@@ -310,6 +315,11 @@ function drawItem(it){
   if(it.k==='food'){ctx.translate(it.x,it.y);ctx.rotate(it.rot);ctx.shadowColor='#5fe0c0';ctx.shadowBlur=12;ctx.fillStyle='#5fe0c0';ctx.beginPath();for(let i=0;i<6;i++){const a=i*1.0472;ctx.lineTo(Math.cos(a)*it.r,Math.sin(a)*it.r);}ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#d6fff4';ctx.beginPath();ctx.arc(0,0,it.r*.35,0,6.2832);ctx.fill();}
   else if(it.k==='iron'){const tx=it.x-it.vx*.3,ty=it.y-50,g=ctx.createLinearGradient(it.x,it.y,tx,ty);g.addColorStop(0,'#ff8a3dbb');g.addColorStop(1,'#ff8a3d00');ctx.strokeStyle=g;ctx.lineWidth=it.r*1.2;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(it.x,it.y);ctx.lineTo(tx,ty);ctx.stroke();
     ctx.shadowColor='#ff8a3d';ctx.shadowBlur=18;ctx.fillStyle='#ff8a3d';ctx.beginPath();ctx.arc(it.x,it.y,it.r,0,6.2832);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#2a0c20';ctx.font='800 '+Math.round(it.r*1.05)+'px "Baloo 2",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Fe',it.x,it.y+1);}
+  else if(it.k==='heme'){const r=it.r,len=Math.min(140,it.vy*.28),g=ctx.createLinearGradient(it.x,it.y,it.x,it.y-len);g.addColorStop(0,'#ffffffdd');g.addColorStop(.3,'#ffe680aa');g.addColorStop(.65,'#ff9de266');g.addColorStop(1,'#9de2ff00');
+    ctx.strokeStyle=g;ctx.lineWidth=r*1.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(it.x,it.y);ctx.lineTo(it.x,it.y-len);ctx.stroke();
+    ctx.translate(it.x,it.y);ctx.rotate(t*4);ctx.shadowColor='#ffe680';ctx.shadowBlur=24;ctx.fillStyle='#fff6c8';ctx.beginPath();
+    for(let i=0;i<16;i++){const a=i*Math.PI/8,rr=i%2?r*.62:r*1.15;ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+    ctx.rotate(-t*4);ctx.fillStyle='#b8860b';ctx.font='800 '+Math.round(r*.78)+'px "Baloo 2",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('200',0,1);}
   else if(it.k==='shield'){const p=1+Math.sin(t*6)*.12;ctx.translate(it.x,it.y);ctx.scale(p,p);ctx.shadowColor='#8be36b';ctx.shadowBlur=16;ctx.fillStyle='#8be36b66';ctx.strokeStyle='#8be36b';ctx.lineWidth=2.5;blobPath(it.r,12,it.seed,3);ctx.fill();ctx.stroke();ctx.shadowBlur=0;
     ctx.fillStyle='#ffcf3f';[[-4,-2],[3,-3],[0,4]].forEach(([a,b])=>{ctx.beginPath();ctx.arc(a,b,3,0,6.2832);ctx.fill();});}
   else drawEnemy(it);
@@ -343,7 +353,7 @@ function draw(){
 function icons(){const main=ctx,tt=t;t=0.6;
   for(const c of document.querySelectorAll('.ico')){const d=Math.min(window.devicePixelRatio||1,2),S=48;c.width=S*d;c.height=S*d;ctx=c.getContext('2d');ctx.setTransform(d,0,0,d,0,0);
     const k=c.dataset.k,s=+c.dataset.s||0,it={k,s,x:S/2,y:S/2+(k==='enemy'?2:2),seed:3+s,rot:k==='enemy'?0:0.3,vx:0};
-    if(k==='enemy')it.r=[9,10,11,12,13][s];else if(k==='shield')it.r=10;else it.r=9;
+    if(k==='enemy')it.r=[9,10,11,12,13][s];else if(k==='heme'){it.r=11;it.vy=0;}else if(k==='shield')it.r=10;else it.r=9;
     if(k==='iron'){it.x-=2;}
     drawItem(it);}
   ctx=main;t=tt;}
