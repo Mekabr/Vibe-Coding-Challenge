@@ -30,6 +30,11 @@ Mit GitHub Pages (Settings → Pages → Branch `main`) ist das Spiel auch onlin
 Antikörper → Komplement → Neutrophil → Makrophage → NET (Neutrophilen-Netz).
 Jeder Treffer kostet ein Leben, du hast drei.
 
+**Bosskampf** – alle 10 Level: Nach einer Warnung (Blinken + Sirene, Ton über 🔊 abschaltbar)
+schiebt sich ein riesiges *P. aeruginosa* von oben ins Bild und spuckt 30 Sekunden lang
+Moleküle auf dich: **Pyocyanin**, **LasA** und **HQNO**. Ausweichen! Während des Bosskampfs
+gibt es **doppelte Punkte**, und die Level-Uhr steht still.
+
 Alle 20 Sekunden steigt das Level: Es kommen mehr Immun-Gegner, sie werden schneller,
 und der Anteil der großen wächst. Dein Rekord wird im Browser gespeichert.
 
@@ -49,6 +54,8 @@ Einträge lassen sich im Supabase-Dashboard unter *Table Editor → scores* anse
 - Das goldene Pigment Staphyloxanthin schützt vor reaktiven Sauerstoffspezies der Neutrophilen.
 - Im Biofilm überleben die Bakterien Antibiotika und Immunangriffe besser.
 - Der Körper hält Eisen knapp („nutritional immunity“), deshalb ist es für Bakterien wertvoll.
+- *P. aeruginosa* verdrängt *S. aureus* in CF-Lungen oft mit der Zeit – u. a. mit der Protease LasA
+  („Staphylolysin“), dem Atmungshemmer HQNO und dem Giftpigment Pyocyanin.
 
 Das Spiel ist stark vereinfacht und nicht maßstabsgetreu.
 
@@ -60,5 +67,7 @@ Alle Werte stehen gesammelt im Script von `index.html` unter dem Kommentar `Leve
 - `enemyInterval` – Abstand zwischen Immun-Gegnern
 - `enemySpeed` / `itemSpeed` – Geschwindigkeiten
 - `IRON_CHANCE` – wie oft Eisen kommt
+- `BOSS_EVERY` / `BOSS_SECONDS` / `WARN_SECONDS` – wann und wie lange der Boss kommt
+- `bossFireRate` / `shotSpeed` – wie schnell der Boss spuckt
 - `HEME_CHANCE` / `hemeSpeed` – Häufigkeit und Tempo des Häm-Jackpots
 - `ENEMY_SIZES` / `sizeRatio` – Gegnergrößen und wie schnell große häufiger werden
