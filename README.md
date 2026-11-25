@@ -23,7 +23,7 @@ Mit GitHub Pages (Settings → Pages → Branch `main`) ist das Spiel auch onlin
 **Sammeln**
 - **Nährstoff** (türkis): +10 Punkte
 - **Eisen (Fe)** (orange): +50 Punkte
-- **Häm-Jackpot** (goldener Stern „200“): +200 Punkte – sehr selten und 1,5× schneller als alles andere
+- **Häm-Jackpot** (goldener Stern „200“): +200 Punkte – sehr selten und 1,3× schneller als alles andere
 - **Biofilm** (grün): 5 Sekunden Schutz – gerammte Immunzellen geben Bonuspunkte
 
 **Ausweichen** – fünf Gegner, von klein nach groß:
