@@ -131,7 +131,7 @@ kbd{font:inherit;font-weight:700;background:var(--case);color:#f6e9f1;border-rad
       <ul class="legend">
         <li><canvas class="ico" data-k="food"></canvas><span><b>Nährstoff</b> +10 Punkte</span></li>
         <li><canvas class="ico" data-k="iron"></canvas><span><b>Eisen (Fe)</b> +50 Punkte</span></li>
-        <li><canvas class="ico" data-k="epo"></canvas><span><b>EPO</b> ultraselten (1 % pro Spiel) – 3 s keine Gegner, 18× Häm regnet!</span></li>
+        <li><canvas class="ico" data-k="epo"></canvas><span><b>EPO</b> ultraselten (0,1 % pro Level) – 3 s keine Gegner, 18× Häm regnet!</span></li>
         <li><canvas class="ico" data-k="heme"></canvas><span><b>Häm-Jackpot</b> +200 – selten &amp; superschnell!</span></li>
         <li><canvas class="ico" data-k="shield"></canvas><span><b>Biofilm</b> 5 s Schutzschild</span></li>
       </ul>
@@ -247,7 +247,7 @@ const shotSpeed=d=>Math.min(420,230+d*40);                 // Grund-Tempo der Bo
 const SHIP_SPEED=483;                                      // Höchsttempo der Kolonie (vorher 420, +15 %)
 const SHIP_ACCEL=2070;                                     // Beschleunigung (vorher 1800, +15 %)
 const IRON_CHANCE=0.13;                                    // Anteil Eisen (Fe) an Sammelobjekten
-const EPO_CHANCE=0.01;                                     // EPO-Event: Chance pro Spiel (1 %)
+const EPO_CHANCE=0.001;                                    // EPO-Event: Chance pro Level (0,1 %)
 const EPO_SECONDS=3;                                       // Dauer des Häm-Regens
 const EPO_HEMES=18;                                        // so viele Häm fallen in dieser Zeit
 const HEME_CHANCE=0.012;                                   // Häm-Jackpot: ~1 von 80 Objekten (etwa 1x pro Minute)
@@ -256,7 +256,8 @@ const ENEMY_SIZES=[12,16,22,30,40];                        // Antikörper, Kompl
 const sizeRatio=l=>Math.min(1.6,0.45+(l-1)*0.12);          // >1: große Gegner häufiger als kleine
 
 function epoSafe(){if(boss||bossWarn>0)return false;const nb=Math.ceil((level+1)/BOSS_EVERY)*BOSS_EVERY;const untilBoss=(nb-1)*LEVEL_SECONDS-lclock;return untilBoss>8;} // kein EPO im/kurz vor dem Bosskampf
-function reset(){epoAt=Math.random()<EPO_CHANCE?rnd(20,120):-1;epo=0;epoLeft=0;epoSpawn=0;ship={x:W/2,y:H-50,vx:0,vy:0};pointerX=null;items=[];parts=[];pops=[];lclock=0;boss=null;bossWarn=0;bossDone=0;bossBanner=0;bossReward='';gold=0;setMult(1);score=0;lives=3;level=1;t=0;spawn=0;mspawn=1;shield=0;shake=0;hurt=0;banner=0;hud();}
+function rollEpo(){if(epoAt<0&&Math.random()<EPO_CHANCE)epoAt=(level-1)*LEVEL_SECONDS+rnd(2,LEVEL_SECONDS-4);} // Zeitpunkt auf der Level-Uhr
+function reset(){epoAt=-1;epo=0;epoLeft=0;epoSpawn=0;ship={x:W/2,y:H-50,vx:0,vy:0};pointerX=null;items=[];parts=[];pops=[];lclock=0;boss=null;bossWarn=0;bossDone=0;bossBanner=0;bossReward='';gold=0;setMult(1);score=0;lives=3;level=1;t=0;spawn=0;mspawn=1;shield=0;shake=0;hurt=0;banner=0;hud();}
 function hud(){$('score').textContent=score;$('level').textContent=level;const L=$('lives');L.textContent='';
   const add=(txt,cls)=>{const sp=document.createElement('span');sp.textContent=txt;if(cls)sp.className=cls;L.append(sp);};
   const lv=Math.min(3,Math.max(lives,0));add('♥'.repeat(lv)+'♡'.repeat(3-lv));
@@ -264,7 +265,7 @@ function hud(){$('score').textContent=score;$('level').textContent=level;const L
   L.setAttribute('aria-label',Math.max(lives,0)+' Leben'+(gold?' und '+gold+' goldene':''));}
 function fact(){return FACTS[Math.floor(Math.random()*FACTS.length)];}
 function show(title,text,btn,f){nameForm.hidden=true;lbMsg.textContent='';ovTitle.textContent=title;ovText.textContent=text;ovFact.textContent=f||'';startBtn.textContent=btn;ov.hidden=false;startBtn.focus({preventScroll:true});}
-function start(){if(state==='pause'){state='play';ov.hidden=true;return;}reset();state='play';ov.hidden=true;}
+function start(){if(state==='pause'){state='play';ov.hidden=true;return;}reset();rollEpo();state='play';ov.hidden=true;}
 function pause(){if(state==='play'){state='pause';show('Pause','Die Kolonie ruht kurz im Schleim.','Weiter',fact());}else if(state==='pause')start();}
 function over(){state='over';let txt='Das Immunsystem hat dich erwischt – '+score+' Punkte.';if(score>best){best=score;try{localStorage.setItem('aureus-best',best)}catch(e){}$('best').textContent=best;txt+=' Neuer Rekord!';}show('Eliminiert',txt,'Neue Kolonie',fact());
   finalScore=score;loadTop(lastName);
@@ -325,7 +326,7 @@ function updateBoss(dt){const b=boss,B=BOSSES[b.type];Object.assign(b,bossSize()
 function update(dt){
   t+=dt;if(!boss&&bossWarn<=0)lclock+=dt;
   const nl=1+Math.floor(lclock/LEVEL_SECONDS);
-  if(nl>level){level=nl;hud();if(level%BOSS_EVERY===0&&bossDone!==level){bossDone=level;bossWarn=WARN_SECONDS;siren();}else banner=2;}
+  if(nl>level){level=nl;hud();rollEpo();if(level%BOSS_EVERY===0&&bossDone!==level){bossDone=level;bossWarn=WARN_SECONDS;siren();}else banner=2;}
   if(bossWarn>0){bossWarn-=dt;if(bossWarn<=0)spawnBoss();}
   if(boss)updateBoss(dt);
   bossBanner=Math.max(0,bossBanner-dt);
@@ -339,7 +340,7 @@ function update(dt){
   }
   ship.x=Math.max(22,Math.min(W-22,ship.x+ship.vx*dt));
   ship.y=Math.max(H*0.25,Math.min(H-40,ship.y+ship.vy*dt));
-  if(epoAt>0&&t>=epoAt&&epoSafe()){epoAt=-1;place({k:'epo',r:13},itemSpeed(level));}
+  if(epoAt>=0&&lclock>=epoAt&&epoSafe()){epoAt=-1;place({k:'epo',r:13},itemSpeed(level));}
   if(epo>0){epo-=dt;epoSpawn-=dt;while(epoSpawn<=0&&epoLeft>0){const it={k:'heme',r:12};place(it,1);it.vy=Math.max(260,hemeSpeed(level)*0.7)*rnd(0.85,1.15);epoLeft--;epoSpawn+=EPO_SECONDS/EPO_HEMES;}}
   spawn-=dt;if(spawn<=0){add();spawn=0.75*rnd(0.7,1.2);}
   if(epo<=0)mspawn-=dt*(boss&&boss.phase==='fight'?0.35:1);if(mspawn<=0){addEnemy();mspawn=enemyInterval(level)*rnd(0.7,1.3);}
