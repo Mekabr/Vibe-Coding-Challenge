@@ -41,6 +41,10 @@ und die Level-Uhr steht still. Vier Bosse wechseln sich ab, ab Level 50 werden s
 | 30, 70 … | *Aspergillus fumigatus* (Schimmelpilz) | lässt Sporen regnen |
 | 40, 80 … | Antibiotika-Therapie | rotierende β-Laktam-Spirale |
 
+**Belohnung nach jedem Boss:** Fehlen normale Herzen, werden sie wieder auf drei aufgefüllt.
+Sind alle drei noch da, gibt es stattdessen ein **goldenes Herz**. Goldene Herzen werden bei
+Treffern zuerst verbraucht, kommen nicht zurück und lassen sich stapeln.
+
 Alle 20 Sekunden steigt das Level: Es kommen mehr Immun-Gegner, sie werden schneller,
 und der Anteil der großen wächst. Dein Rekord wird im Browser gespeichert.
 
