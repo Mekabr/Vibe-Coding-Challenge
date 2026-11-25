@@ -32,6 +32,15 @@ Jeder Treffer kostet ein Leben, du hast drei.
 Alle 40 Sekunden steigt das Level: Es kommen mehr Immun-Gegner, sie werden schneller,
 und der Anteil der großen wächst. Dein Rekord wird im Browser gespeichert.
 
+## Leaderboard
+
+Nach dem Game Over kann man seinen Namen eintragen; das Spiel zeigt die **Top 3** aller
+Spielerinnen und Spieler (pro Name zählt der beste Score). Gespeichert wird in einer
+[Supabase](https://supabase.com)-Datenbank – Spieler brauchen dafür kein Konto, nur Internet.
+Ohne Verbindung läuft das Spiel normal weiter, nur ohne Leaderboard.
+
+Einträge lassen sich im Supabase-Dashboard unter *Table Editor → scores* ansehen und löschen.
+
 ## Biologischer Hintergrund (vereinfacht)
 
 - Bei CF ist der CFTR-Kanal defekt; der Atemwegsschleim wird zäh und schlecht abtransportiert.

@@ -36,6 +36,22 @@ h1 span{color:#d99a00}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;color:#f6e9f1;background:#14060fc4;gap:10px}
 .overlay[hidden]{display:none}
+.overlay{overflow-y:auto}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.nameform{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+.nameform[hidden]{display:none}
+.nameform input{font:inherit;font-size:16px;min-height:44px;width:min(220px,60vw);padding:4px 16px;border-radius:999px;border:2px solid #ffffff44;background:#ffffff14;color:#fff}
+.nameform input:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.btn.small{font-size:16px;min-height:44px;padding:4px 20px;margin-top:0;box-shadow:0 4px 0 #b88a10}
+.btn:disabled{opacity:.6;cursor:wait}
+.lbmsg{min-height:1.4em;font-size:15px;color:var(--teal)!important}
+.top{background:#ffffff12;border-radius:14px;padding:8px 18px 10px;min-width:min(260px,80%)}
+.top strong{color:var(--gold);font-size:17px}
+.top ol{margin:4px 0 0;padding:0;list-style:none;text-align:left}
+.top li{display:flex;justify-content:space-between;gap:16px;font-size:16px;padding:1px 0}
+.top li b{font-variant-numeric:tabular-nums;color:#fff}
+.top li.me{color:var(--gold)}
+.top li.muted{color:#c9b6ff;justify-content:center;font-size:15px}
 .overlay h2{margin:0;font-size:clamp(30px,6vw,44px);line-height:1.05;color:var(--gold)}
 .overlay p{margin:0;max-width:38ch;font-size:17px;color:#e4cbd9}
 .overlay .fact{font-size:15px;color:#c9b6ff;max-width:42ch;border-top:1px solid #ffffff22;padding-top:10px;margin-top:4px}
@@ -83,6 +99,13 @@ kbd{font:inherit;font-weight:700;background:var(--case);color:#f6e9f1;border-rad
       <div class="overlay" id="ov">
         <h2 id="ovTitle">Aureus</h2>
         <p id="ovText">Du bist eine Kolonie Staphylococcus aureus im zähen Schleim einer CF-Lunge. Alles, was funkelt, darfst du einsammeln. Alles, was rot leuchtet und dich anstarrt, ist das Immunsystem – ausweichen!</p>
+        <form id="nameForm" class="nameform" hidden>
+          <label for="nameIn" class="sr">Dein Name</label>
+          <input id="nameIn" maxlength="20" placeholder="Dein Name" autocomplete="nickname" enterkeyhint="send">
+          <button class="btn small" id="sendBtn">Eintragen</button>
+        </form>
+        <p class="lbmsg" id="lbMsg" aria-live="polite"></p>
+        <div class="top"><strong>🏆 Top 3</strong><ol id="top3"><li class="muted">Lade …</li></ol></div>
         <p class="fact" id="ovFact"></p>
         <button class="btn" id="startBtn">Infektion starten</button>
       </div>
@@ -125,6 +148,40 @@ kbd{font:inherit;font-weight:700;background:var(--case);color:#f6e9f1;border-rad
 const screen=document.getElementById('screen'),cv=document.getElementById('c');let ctx=cv.getContext('2d');
 const $=id=>document.getElementById(id);
 const ov=$('ov'),ovTitle=$('ovTitle'),ovText=$('ovText'),ovFact=$('ovFact'),startBtn=$('startBtn');
+/* Online-Leaderboard (Supabase) – URL und Publishable Key sind öffentlich */
+const SB_URL='https://tjbzmfmvmaescrjfkpqf.supabase.co';
+const SB_KEY='sb_publishable_MOWoHg_QgUntexoxI-iORw_C3LvpCv3';
+const nameForm=$('nameForm'),nameIn=$('nameIn'),sendBtn=$('sendBtn'),lbMsg=$('lbMsg'),top3=$('top3');
+let lastName='';try{lastName=localStorage.getItem('aureus-name')||''}catch(e){}
+const MEDALS=['🥇','🥈','🥉'];
+function renderTop(rows,me){
+  top3.textContent='';
+  const msg=txt=>{const li=document.createElement('li');li.className='muted';li.textContent=txt;top3.append(li);};
+  if(!rows){msg('Leaderboard gerade nicht erreichbar');return;}
+  if(!rows.length){msg('Noch keine Einträge – sei die/der Erste!');return;}
+  rows.forEach((r,i)=>{const li=document.createElement('li'),n=document.createElement('span'),b=document.createElement('b');
+    n.textContent=MEDALS[i]+' '+String(r.name);b.textContent=String(r.score);li.append(n,b);
+    if(me&&String(r.name)===me)li.className='me';top3.append(li);});
+}
+async function loadTop(me){
+  try{const r=await fetch(SB_URL+'/rest/v1/leaderboard?select=name,score&order=score.desc&limit=3',{headers:{apikey:SB_KEY}});
+    if(!r.ok)throw new Error(r.status);renderTop(await r.json(),me);}
+  catch(e){renderTop(null);}
+}
+async function submitScore(name,pts){
+  const r=await fetch(SB_URL+'/rest/v1/scores',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({name,score:pts})});
+  if(!r.ok)throw new Error(r.status);
+}
+let finalScore=0;
+nameForm.addEventListener('submit',async e=>{
+  e.preventDefault();const name=nameIn.value.trim().slice(0,20);
+  if(!name){lbMsg.textContent='Bitte gib einen Namen ein.';nameIn.focus();return;}
+  sendBtn.disabled=true;lbMsg.textContent='Wird eingetragen …';
+  try{await submitScore(name,finalScore);lastName=name;try{localStorage.setItem('aureus-name',name)}catch(e){}
+    lbMsg.textContent='Eingetragen! ✔';nameForm.hidden=true;loadTop(name);startBtn.focus({preventScroll:true});}
+  catch(err){lbMsg.textContent='Konnte nicht eintragen – keine Verbindung zum Leaderboard.';}
+  sendBtn.disabled=false;
+});
 const FACTS=[
  'S. aureus bildet „Small Colony Variants“: langsam wachsende Formen, die in CF-Lungen lange überdauern und Antibiotika besser tolerieren.',
  'Protein A auf der Oberfläche von S. aureus bindet Antikörper falsch herum – so entgehen die Bakterien der Markierung für Fresszellen.',
@@ -155,10 +212,12 @@ const sizeRatio=l=>Math.min(1.6,0.45+(l-1)*0.12);          // >1: große Gegner 
 function reset(){ship={x:W/2,y:H-50,vx:0,vy:0};pointerX=null;items=[];parts=[];pops=[];score=0;lives=3;level=1;t=0;spawn=0;mspawn=1;shield=0;shake=0;hurt=0;banner=0;hud();}
 function hud(){$('score').textContent=score;$('level').textContent=level;$('lives').textContent='♥'.repeat(Math.max(lives,0))+'♡'.repeat(Math.max(3-lives,0));}
 function fact(){return FACTS[Math.floor(Math.random()*FACTS.length)];}
-function show(title,text,btn,f){ovTitle.textContent=title;ovText.textContent=text;ovFact.textContent=f||'';startBtn.textContent=btn;ov.hidden=false;startBtn.focus({preventScroll:true});}
+function show(title,text,btn,f){nameForm.hidden=true;lbMsg.textContent='';ovTitle.textContent=title;ovText.textContent=text;ovFact.textContent=f||'';startBtn.textContent=btn;ov.hidden=false;startBtn.focus({preventScroll:true});}
 function start(){if(state==='pause'){state='play';ov.hidden=true;return;}reset();state='play';ov.hidden=true;}
 function pause(){if(state==='play'){state='pause';show('Pause','Die Kolonie ruht kurz im Schleim.','Weiter',fact());}else if(state==='pause')start();}
-function over(){state='over';let txt='Das Immunsystem hat dich erwischt – '+score+' Punkte.';if(score>best){best=score;try{localStorage.setItem('aureus-best',best)}catch(e){}$('best').textContent=best;txt+=' Neuer Rekord!';}show('Eliminiert',txt,'Neue Kolonie',fact());}
+function over(){state='over';let txt='Das Immunsystem hat dich erwischt – '+score+' Punkte.';if(score>best){best=score;try{localStorage.setItem('aureus-best',best)}catch(e){}$('best').textContent=best;txt+=' Neuer Rekord!';}show('Eliminiert',txt,'Neue Kolonie',fact());
+  finalScore=score;loadTop(lastName);
+  if(score>0){nameForm.hidden=false;nameIn.value=lastName;lbMsg.textContent='Trag dich ins Leaderboard ein:';nameIn.focus({preventScroll:true});}}
 
 function rnd(a,b){return a+Math.random()*(b-a)}
 function place(it,speed){it.x=rnd(it.r+6,W-it.r-6);it.y=-40;it.vy=speed*rnd(0.85,1.25);it.vx=0;it.seed=Math.random()*100;items.push(it);}
@@ -288,6 +347,7 @@ function icons(){const main=ctx,tt=t;t=0.6;
     if(k==='iron'){it.x-=2;}
     drawItem(it);}
   ctx=main;t=tt;}
+loadTop(lastName);
 icons();if(document.fonts)document.fonts.ready.then(icons);
 
 let last=performance.now();
@@ -299,7 +359,7 @@ requestAnimationFrame(loop);
 
 startBtn.addEventListener('click',start);
 $('pauseBtn').addEventListener('click',()=>{if(state==='play'||state==='pause')pause();});
-addEventListener('keydown',e=>{const k=e.key.toLowerCase();
+addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
   if(['arrowleft','arrowright','arrowup','arrowdown','a','d','w','s'].includes(k)){keys[k]=true;pointerX=null;e.preventDefault();}
   if(k==='p'||k==='escape')pause();
   if((k===' '||k==='enter')&&state!=='play'&&document.activeElement!==startBtn){e.preventDefault();start();}});
