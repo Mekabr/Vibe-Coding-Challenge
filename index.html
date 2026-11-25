@@ -207,6 +207,7 @@ const LEVEL_SECONDS=20;                                    // Dauer eines Levels
 const enemyInterval=l=>Math.max(0.22,1.5/(1+(l-1)*0.4));   // Sekunden zwischen Immun-Gegnern
 const enemySpeed=l=>Math.min(480,120+(l-1)*30);            // Geschwindigkeit Gegner
 const itemSpeed=l=>Math.min(300,110+(l-1)*15);             // Geschwindigkeit Nährstoffe & Co.
+const IRON_CHANCE=0.13;                                    // Anteil Eisen (Fe) an Sammelobjekten
 const HEME_CHANCE=0.012;                                   // Häm-Jackpot: ~1 von 80 Objekten (etwa 1x pro Minute)
 const hemeSpeed=l=>1.5*1.25*Math.max(enemySpeed(l),itemSpeed(l)*1.5); // 1,5x schneller als das schnellste andere Objekt
 const ENEMY_SIZES=[12,16,22,30,40];                        // Antikörper, Komplement, Neutrophil, Makrophage, NET
@@ -229,8 +230,8 @@ function addEnemy(){const s=pickSize(level);place({k:'enemy',s,r:ENEMY_SIZES[s]*
 function add(){
   const r=Math.random(),sp=itemSpeed(level);
   if(Math.random()<HEME_CHANCE){const it={k:'heme',r:12};place(it,1);it.vy=hemeSpeed(level);return;}
-  if(r<0.05&&shield<=0)place({k:'shield',r:14},sp);
-  else if(r<0.27){const it={k:'iron',r:11};place(it,sp*1.5);it.vx=rnd(-50,50);}
+  if(r<0.05){if(shield<=0)place({k:'shield',r:14},sp);else place({k:'food',r:10,rot:rnd(0,6)},sp);}
+  else if(r<0.05+IRON_CHANCE){const it={k:'iron',r:11};place(it,sp*1.5);it.vx=rnd(-50,50);}
   else place({k:'food',r:10,rot:rnd(0,6)},sp);
 }
 function pop(x,y,txt,col){pops.push({x,y,txt,col,l:1});}

@@ -59,5 +59,6 @@ Alle Werte stehen gesammelt im Script von `index.html` unter dem Kommentar `Leve
 - `LEVEL_SECONDS` – Dauer eines Levels
 - `enemyInterval` – Abstand zwischen Immun-Gegnern
 - `enemySpeed` / `itemSpeed` – Geschwindigkeiten
+- `IRON_CHANCE` – wie oft Eisen kommt
 - `HEME_CHANCE` / `hemeSpeed` – Häufigkeit und Tempo des Häm-Jackpots
 - `ENEMY_SIZES` / `sizeRatio` – Gegnergrößen und wie schnell große häufiger werden
