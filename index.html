@@ -132,6 +132,7 @@ kbd{font:inherit;font-weight:700;background:var(--case);color:#f6e9f1;border-rad
   <div class="groups">
     <section class="grp good">
       <h3>✔ Collect <small>it sparkles</small></h3>
+      <p class="reward">Every completed level pays a growing bonus: 10 × the level number (level 5 → +50, level 15 → +150).</p>
       <ul class="legend">
         <li><canvas class="ico" data-k="food"></canvas><span><b>Nutrient</b> +10 points</span></li>
         <li><canvas class="ico" data-k="iron"></canvas><span><b>Iron (Fe)</b> +50 points</span></li>
@@ -237,7 +238,7 @@ const motes=Array.from({length:60},()=>({x:Math.random(),y:Math.random(),z:Math.
 let ship=null,items=[],parts=[],pops=[],state='menu',score=0,lives=3,level=1,t=0,spawn=0,mspawn=1,shield=0,shake=0,hurt=0,banner=0;
 let lclock=0,boss=null,bossWarn=0,bossDone=0,bossBanner=0,bossReward='',mult=1,gold=0;
 let epoAt=-1,epo=0,epoLeft=0,epoSpawn=0;
-let scv=0,streak=0,dashT=0,dashCD=0,trail=[],noHit=0,st={};
+let lastLB=0,scv=0,streak=0,dashT=0,dashCD=0,trail=[],noHit=0,st={};
 const keys={};let pointerX=null,pointerY=null;
 
 /* Game balance: everything here can be tweaked */
@@ -253,6 +254,7 @@ const shotSpeed=d=>Math.min(420,230+d*40);                 // base speed of boss
 const SHIP_SPEED=483;                                      // colony top speed
 const SHIP_ACCEL=2070;                                     // colony acceleration
 const IRON_CHANCE=0.13;                                    // share of iron (Fe) among collectibles
+const LEVEL_BONUS=10;                                      // bonus per completed level = LEVEL_BONUS × level number
 const SCV_CHANCE=0.02;                                     // SCV power-up: share of collectibles (~once a minute)
 const SCV_SECONDS=5;                                       // how long the colony stays small (s)
 const STREAK_EVERY=10;                                     // streak bonus after every 10 pickups without a hit …
@@ -268,7 +270,7 @@ const sizeRatio=l=>Math.min(1.6,0.45+(l-1)*0.12);          // >1: large enemies 
 
 function epoSafe(){if(boss||bossWarn>0)return false;const nb=Math.ceil((level+1)/BOSS_EVERY)*BOSS_EVERY;const untilBoss=(nb-1)*LEVEL_SECONDS-lclock;return untilBoss>8;} // no EPO during or just before a boss fight
 function rollEpo(){if(epoAt<0&&Math.random()<EPO_CHANCE)epoAt=(level-1)*LEVEL_SECONDS+rnd(2,LEVEL_SECONDS-4);} // drop time on the level clock
-function reset(){epoAt=-1;epo=0;epoLeft=0;epoSpawn=0;scv=0;streak=0;dashT=0;dashCD=0;trail=[];noHit=0;st={food:0,iron:0,heme:0,bosses:0,noHit:0,streak:0,dashes:0};ship={x:W/2,y:H-50,vx:0,vy:0};pointerX=null;items=[];parts=[];pops=[];lclock=0;boss=null;bossWarn=0;bossDone=0;bossBanner=0;bossReward='';gold=0;setMult(1);score=0;lives=3;level=1;t=0;spawn=0;mspawn=1;shield=0;shake=0;hurt=0;banner=0;hud();}
+function reset(){epoAt=-1;epo=0;epoLeft=0;epoSpawn=0;scv=0;streak=0;dashT=0;dashCD=0;trail=[];noHit=0;st={food:0,iron:0,heme:0,bosses:0,noHit:0,streak:0,dashes:0,levelBonus:0};lastLB=0;ship={x:W/2,y:H-50,vx:0,vy:0};pointerX=null;items=[];parts=[];pops=[];lclock=0;boss=null;bossWarn=0;bossDone=0;bossBanner=0;bossReward='';gold=0;setMult(1);score=0;lives=3;level=1;t=0;spawn=0;mspawn=1;shield=0;shake=0;hurt=0;banner=0;hud();}
 function hud(){$('score').textContent=score;$('level').textContent=level;const L=$('lives');L.textContent='';
   const add=(txt,cls)=>{const sp=document.createElement('span');sp.textContent=txt;if(cls)sp.className=cls;L.append(sp);};
   const lv=Math.min(3,Math.max(lives,0));add('♥'.repeat(lv)+'♡'.repeat(3-lv));
@@ -280,7 +282,7 @@ function start(){if(state==='pause'){state='play';ov.hidden=true;return;}reset()
 function pause(){if(state==='play'){state='pause';show('Paused','The colony rests in the mucus for a moment.','Resume',fact());}else if(state==='pause')start();}
 function over(){state='over';let txt='The immune system got you – '+score+' points.';if(score>best){best=score;try{localStorage.setItem('aureus-best',best)}catch(e){}$('best').textContent=best;txt+=' New best!';}show('Eliminated',txt,'New colony',fact());
   const S=$('ovStats'),mm=Math.floor(t/60),ss=Math.floor(t%60);
-  S.textContent='Level '+level+' · '+st.bosses+(st.bosses===1?' boss':' bosses')+' beaten · survived '+mm+':'+String(ss).padStart(2,'0')+' min\n'+st.food+' nutrients · '+st.iron+' iron · '+st.heme+' heme\nLongest time without a hit: '+Math.floor(st.noHit)+' s · Best streak: '+st.streak+' · Dashes: '+st.dashes;
+  S.textContent='Level '+level+' · '+st.bosses+(st.bosses===1?' boss':' bosses')+' beaten · survived '+mm+':'+String(ss).padStart(2,'0')+' min\n'+st.food+' nutrients · '+st.iron+' iron · '+st.heme+' heme · level bonus '+st.levelBonus+'\nLongest time without a hit: '+Math.floor(st.noHit)+' s · Best streak: '+st.streak+' · Dashes: '+st.dashes;
   S.hidden=false;
   finalScore=score;loadTop(lastName);
   if(score>0){nameForm.hidden=false;nameIn.value=lastName;lbMsg.textContent='Add yourself to the leaderboard:';nameIn.focus({preventScroll:true});}}
@@ -346,7 +348,7 @@ function dash(){if(state!=='play'||dashCD>0||!ship)return;
 function update(dt){
   t+=dt;if(!boss&&bossWarn<=0)lclock+=dt;
   const nl=1+Math.floor(lclock/LEVEL_SECONDS);
-  if(nl>level){level=nl;hud();rollEpo();if(level%BOSS_EVERY===0&&bossDone!==level){bossDone=level;bossWarn=WARN_SECONDS;siren();}else banner=2;}
+  if(nl>level){const lb=LEVEL_BONUS*level;level=nl;score+=lb;lastLB=lb;st.levelBonus+=lb;pop(ship.x,ship.y-34,'Level '+(level-1)+' cleared! +'+lb,'#ffcf3f');hud();rollEpo();if(level%BOSS_EVERY===0&&bossDone!==level){bossDone=level;bossWarn=WARN_SECONDS;siren();}else banner=2;}
   if(bossWarn>0){bossWarn-=dt;if(bossWarn<=0)spawnBoss();}
   if(boss)updateBoss(dt);
   bossBanner=Math.max(0,bossBanner-dt);
@@ -551,7 +553,7 @@ function draw(){
     ctx.fillStyle='#8be36b';ctx.font='800 '+Math.round(m*0.1)+'px "Baloo 2",sans-serif';ctx.fillText('Boss survived!',W/2,H*0.42);ctx.fillStyle='#ffcf3f';ctx.font='700 '+Math.round(m*0.05)+'px "Baloo 2",sans-serif';ctx.fillText(bossReward,W/2,H*0.42+m*0.09);ctx.globalAlpha=1;ctx.shadowBlur=0;}
   if(banner>0&&state==='play'){const m=Math.min(W,H);ctx.globalAlpha=Math.min(1,banner);ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000a';ctx.shadowBlur=12;
     ctx.fillStyle='#ffcf3f';ctx.font='800 '+Math.round(m*0.11)+'px "Baloo 2",sans-serif';ctx.fillText('Level '+level,W/2,H*0.42);
-    ctx.fillStyle='#c9b6ff';ctx.font='700 '+Math.round(m*0.045)+'px "Baloo 2",sans-serif';ctx.fillText('The immune system is gearing up!',W/2,H*0.42+m*0.09);ctx.globalAlpha=1;ctx.shadowBlur=0;}
+    ctx.fillStyle='#c9b6ff';ctx.font='700 '+Math.round(m*0.045)+'px "Baloo 2",sans-serif';ctx.fillText('The immune system is gearing up!',W/2,H*0.42+m*0.09);ctx.fillStyle='#ffcf3f';ctx.fillText('Level bonus +'+lastLB,W/2,H*0.42+m*0.15);ctx.globalAlpha=1;ctx.shadowBlur=0;}
   ctx.restore();
 }
 

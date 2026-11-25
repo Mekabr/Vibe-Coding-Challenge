@@ -35,6 +35,8 @@ The dash is a short burst of speed with a 3-second cooldown (shown as a ring aro
 
 **Streak bonus:** every 10 pickups in a row without getting hit give +25 extra points.
 
+**Level bonus:** every completed level pays 10 × the level number (level 5 → +50, level 15 → +150).
+
 **Dodge** – anything that glows red; five enemies from small to large:
 antibody → complement → neutrophil → macrophage → NET (neutrophil extracellular trap).
 Each hit costs a life; you have three.
@@ -58,7 +60,7 @@ you get a **golden heart** instead. Golden hearts are used up first when you get
 don't come back, and stack.
 
 **Game over:** you see your stats – level, bosses beaten, time survived, nutrients, iron and heme
-collected, longest time without a hit, best streak and number of dashes.
+collected, total level bonus, longest time without a hit, best streak and number of dashes.
 
 Your personal best is stored in the browser.
 
@@ -98,6 +100,7 @@ All values are collected in the script of `index.html` under the comment `Game b
 - `enemySpeed` / `itemSpeed` – speeds
 - `SHIP_SPEED` / `SHIP_ACCEL` – speed and acceleration of your colony
 - `DASH_SPEED` / `DASH_TIME` / `DASH_COOLDOWN` – the dash
+- `LEVEL_BONUS` – bonus per completed level (× level number)
 - `IRON_CHANCE` – how often iron appears
 - `SCV_CHANCE` / `SCV_SECONDS` – the SCV power-up
 - `STREAK_EVERY` / `STREAK_BONUS` – the streak bonus
